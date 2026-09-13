@@ -1,0 +1,173 @@
+/* ---- Hero ---- */
+
+.hero {
+  position: relative;
+  padding-block: var(--ui-space-2xl) var(--ui-space-2xl);
+  overflow: hidden;
+}
+
+/* A faint drafting grid behind the hero, faded out towards the edges. */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(var(--ui-color-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ui-color-grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 80% 70% at 30% 40%, black 30%, transparent 80%);
+}
+
+.heroGrid {
+  display: grid;
+  gap: var(--ui-space-xl);
+  align-items: center;
+}
+
+.heroCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ui-space-m);
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--ui-text-display);
+  font-weight: 650;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  font-variation-settings: "opsz" 96;
+}
+
+.lead {
+  max-width: 34rem;
+  font-size: var(--ui-text-l);
+  color: var(--ui-color-text-secondary);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2xs);
+}
+
+.demoNote {
+  max-width: 30rem;
+  padding-left: var(--ui-space-s);
+  border-left: 2px solid var(--ui-color-accent);
+  font-size: var(--ui-text-s);
+  color: var(--ui-color-text-secondary);
+}
+.demoNote strong {
+  font-weight: 600;
+  color: var(--ui-color-text-primary);
+}
+
+/* ---- Sections ---- */
+
+.section {
+  padding-block: var(--ui-space-2xl);
+  border-top: 1px solid var(--ui-color-border);
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-s);
+  max-width: 44rem;
+  margin-bottom: var(--ui-space-xl);
+}
+
+.sectionTitle {
+  font-size: var(--ui-text-2xl);
+}
+
+.sectionLead {
+  max-width: 40rem;
+  font-size: var(--ui-text-l);
+  color: var(--ui-color-text-secondary);
+}
+
+/* ---- How it works ---- */
+
+.stages {
+  display: grid;
+  gap: 0;
+  counter-reset: stage;
+  border-top: 1px solid var(--ui-color-border-strong);
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  grid-template-rows: auto auto;
+  column-gap: var(--ui-space-s);
+  row-gap: var(--ui-space-3xs);
+  padding-block: var(--ui-space-m);
+  border-bottom: 1px solid var(--ui-color-border);
+}
+
+.stageNumber {
+  grid-row: span 2;
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-s);
+  color: var(--ui-color-accent);
+}
+
+.stageLabel {
+  font-size: var(--ui-text-xl);
+}
+
+.stageSummary {
+  max-width: 34rem;
+  color: var(--ui-color-text-secondary);
+}
+
+/* ---- Closing ---- */
+
+.closing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ui-space-l);
+}
+.closing > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-s);
+}
+.closingTitle {
+  font-size: var(--ui-text-xl);
+}
+
+/* ---- Wider screens ---- */
+
+@media (min-width: 64rem) {
+  .heroGrid {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: var(--ui-space-2xl);
+  }
+
+  .stages {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border-top: 0;
+  }
+  .stage {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    row-gap: var(--ui-space-xs);
+    padding: var(--ui-space-m) var(--ui-space-m) var(--ui-space-l) 0;
+    border-top: 1px solid var(--ui-color-border-strong);
+    border-bottom: 0;
+  }
+  .stage + .stage {
+    padding-left: var(--ui-space-m);
+    border-left: 1px solid var(--ui-color-border);
+  }
+  .stageNumber {
+    grid-row: auto;
+  }
+}

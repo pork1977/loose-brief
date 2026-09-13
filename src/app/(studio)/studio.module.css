@@ -1,0 +1,10 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.main {
+  flex: 1;
+  padding: var(--ui-space-l) var(--ui-gutter) var(--ui-space-xl);
+}

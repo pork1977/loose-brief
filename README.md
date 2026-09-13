@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Loose Brief
 
-## Getting Started
+An AI studio that takes a short business brief and turns it into three brand directions, a design token system and a working website.
 
-First, run the development server:
+Work in progress. The build plan and the decisions behind it are in [docs/plan.md](docs/plan.md).
+
+## Running it
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3400.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Where things live
 
-## Learn More
+| Path | What's in it |
+| --- | --- |
+| `src/app/(marketing)` | Landing page and "How it's built" |
+| `src/app/(studio)` | The five project stages: brief, directions, brand system, studio, export |
+| `src/lib/tokens.ts` | The brand token model and the compiler that turns it into CSS variables |
+| `src/lib/brand-fonts.ts` | The curated fonts a brand can use |
+| `src/data/demo-directions.ts` | The three built-in directions for Ebbfield, the fictional demo brand |
+| `src/components/brand` | Components that only read brand tokens |
+| `src/components/ui` | Loose Brief's own buttons, cards and panels |
 
-To learn more about Next.js, take a look at the following resources:
+## Two sets of tokens
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Loose Brief's interface uses `--ui-*` variables. A generated brand uses `--color-*`, `--font-*`, `--radius-*` and so on, set only on a `BrandScope` wrapper, so editing a brand never restyles the editor around it.

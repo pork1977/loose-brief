@@ -1,0 +1,200 @@
+.showcase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-s);
+  min-width: 0;
+}
+
+.frame {
+  border: 1px solid var(--ui-color-border-strong);
+  border-radius: var(--ui-radius-panel);
+  background: var(--ui-color-surface-raised);
+  box-shadow: var(--ui-shadow-panel);
+  overflow: hidden;
+}
+
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-xs);
+  height: 2.25rem;
+  padding: 0 var(--ui-space-xs);
+  border-bottom: 1px solid var(--ui-color-border);
+  font-family: var(--ui-font-mono);
+  font-size: 0.6875rem;
+  color: var(--ui-color-text-muted);
+}
+.dots {
+  display: flex;
+  gap: 0.3rem;
+}
+.dots i {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--ui-color-border-strong);
+}
+.url {
+  flex: 1;
+  max-width: 16rem;
+  margin-inline: auto;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--ui-color-surface-sunken);
+  text-align: center;
+}
+.chromeLabel {
+  min-width: 5.5rem;
+  text-align: right;
+}
+
+/*
+ * A fixed height stops the page jumping as directions with longer copy rotate
+ * in. Narrow screens stack the preview, so they get a taller floor instead.
+ */
+.canvas {
+  min-height: 38rem;
+}
+@media (min-width: 40rem) {
+  .canvas {
+    min-height: 0;
+    height: clamp(24rem, 42vw, 30rem);
+  }
+}
+
+.controls {
+  display: flex;
+  align-items: stretch;
+  gap: var(--ui-space-2xs);
+}
+
+.tabs {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ui-space-2xs);
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2xs);
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-control);
+  background: transparent;
+  text-align: left;
+  overflow: hidden;
+  transition:
+    border-color var(--ui-motion-fast) var(--ui-ease),
+    background-color var(--ui-motion-fast) var(--ui-ease);
+}
+.tab:hover {
+  border-color: var(--ui-color-border-strong);
+}
+.tab[aria-pressed="true"] {
+  border-color: var(--ui-color-text-primary);
+  background: var(--ui-color-surface-raised);
+}
+
+.tabLetter {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 4px;
+  background: var(--ui-color-surface-sunken);
+  font-family: var(--ui-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+.tab[aria-pressed="true"] .tabLetter {
+  background: var(--ui-color-text-primary);
+  color: var(--ui-color-background);
+}
+
+.tabText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.tabName {
+  font-size: var(--ui-text-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tabSwatches {
+  display: flex;
+  gap: 0.2rem;
+}
+.tabSwatches :global(.ui-swatch) {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+.progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--ui-color-accent);
+  transform-origin: left;
+  animation-name: fill;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+.readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2xs) var(--ui-space-m);
+  padding-top: var(--ui-space-2xs);
+  border-top: 1px dashed var(--ui-color-border);
+  font-family: var(--ui-font-mono);
+  font-size: 0.6875rem;
+}
+.readout div {
+  display: flex;
+  gap: 0.4rem;
+}
+.readout dt {
+  color: var(--ui-color-text-muted);
+}
+.readout dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--ui-color-text-primary);
+}
+
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (max-width: 36rem) {
+  .tabSwatches {
+    display: none;
+  }
+  .tab {
+    padding: 0.5rem;
+  }
+  .tabLetter {
+    display: none;
+  }
+  .tabName {
+    white-space: normal;
+    line-height: 1.2;
+  }
+}

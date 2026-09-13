@@ -1,0 +1,43 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--ui-color-border);
+  background: color-mix(in srgb, var(--ui-color-background) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-m);
+  height: 4rem;
+}
+
+.nav {
+  display: none;
+  gap: var(--ui-space-m);
+  margin-left: var(--ui-space-m);
+  font-size: var(--ui-text-s);
+  color: var(--ui-color-text-secondary);
+}
+.nav a {
+  text-decoration: none;
+  transition: color var(--ui-motion-fast) var(--ui-ease);
+}
+.nav a:hover {
+  color: var(--ui-color-text-primary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3xs);
+  margin-left: auto;
+}
+
+@media (min-width: 44rem) {
+  .nav {
+    display: flex;
+  }
+}

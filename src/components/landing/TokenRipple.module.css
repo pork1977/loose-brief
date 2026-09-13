@@ -1,0 +1,270 @@
+.ripple {
+  display: grid;
+  gap: var(--ui-space-l);
+  align-items: start;
+}
+
+/* ---- Controls (Loose Brief tokens) ---- */
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-m);
+}
+
+.field {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.field legend {
+  margin-bottom: var(--ui-space-2xs);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-color-text-secondary);
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2xs);
+}
+
+.option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.5rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-control);
+  background: var(--ui-color-surface-raised);
+  font-size: var(--ui-text-s);
+  cursor: pointer;
+  transition: border-color var(--ui-motion-fast) var(--ui-ease);
+}
+.option:hover {
+  border-color: var(--ui-color-border-strong);
+}
+.option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.option:has(input:checked) {
+  border-color: var(--ui-color-text-primary);
+  box-shadow: inset 0 0 0 1px var(--ui-color-text-primary);
+}
+/* A tick as well as the border, so the selection doesn't rely on colour alone. */
+.option:has(input:checked)::after {
+  content: "";
+  width: 0.4rem;
+  height: 0.7rem;
+  margin-left: 0.15rem;
+  border: solid var(--ui-color-text-primary);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -2px);
+}
+.option:has(input:focus-visible) {
+  outline: 2px solid var(--ui-color-accent);
+  outline-offset: 3px;
+}
+
+.code {
+  padding: var(--ui-space-s);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-color-surface-sunken);
+  font-size: 0.75rem;
+  line-height: 1.8;
+  overflow-x: auto;
+  color: var(--ui-color-text-primary);
+}
+.codeName {
+  color: var(--ui-color-text-secondary);
+}
+.flash {
+  animation: flash 900ms var(--ui-ease);
+  border-radius: 3px;
+}
+
+@keyframes flash {
+  from {
+    background: var(--ui-color-accent-soft);
+    box-shadow: 0 0 0 4px var(--ui-color-accent-soft);
+  }
+  to {
+    background: transparent;
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+/* ---- Surfaces (brand tokens only, no raw colours below here) ---- */
+
+.surfaces {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--ui-color-border-strong);
+  border-radius: var(--ui-radius-panel);
+  box-shadow: var(--ui-shadow-panel);
+}
+
+.surface {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.navSurface {
+  grid-column: span 6;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding-block: 0.7rem;
+}
+.logo {
+  margin-right: auto;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--font-display-tracking);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+.link {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+.button {
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius-button);
+  background: var(--color-button-primary);
+  color: var(--color-button-primary-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.label {
+  font-family: var(--font-label);
+  font-weight: var(--font-label-weight);
+  letter-spacing: var(--font-label-tracking);
+  text-transform: var(--font-label-transform);
+  font-size: 0.625rem;
+  color: var(--color-text-secondary);
+}
+
+.statSurface {
+  grid-column: span 3;
+}
+.stat {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--font-display-tracking);
+  line-height: var(--font-display-leading);
+  font-size: 2rem;
+}
+.spark {
+  width: 100%;
+  height: 3rem;
+  overflow: visible;
+}
+.spark path {
+  fill: none;
+  stroke: var(--color-brand-primary);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.socialSurface {
+  grid-column: span 3;
+  justify-content: space-between;
+  border-color: transparent;
+  background: var(--color-brand-primary);
+  color: var(--color-text-inverse);
+}
+.socialSurface .label {
+  color: var(--color-text-inverse);
+  opacity: 0.8;
+}
+.socialHeadline {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--font-display-tracking);
+  line-height: var(--font-display-leading);
+  font-size: 1.625rem;
+  text-wrap: balance;
+}
+
+.cardSurface {
+  grid-column: span 4;
+}
+.cardTitle {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--font-display-tracking);
+  font-size: 1.375rem;
+  line-height: 1.05;
+}
+.cardBody {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+.textLink {
+  align-self: flex-start;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-brand-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--color-brand-secondary);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.25em;
+}
+
+.phoneSurface {
+  grid-column: span 2;
+  justify-content: space-between;
+  border-radius: calc(var(--radius-card) + 8px);
+  background: var(--color-background);
+}
+.phoneHeadline {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--font-display-tracking);
+  line-height: var(--font-display-leading);
+  font-size: 1.125rem;
+}
+.phoneButton {
+  font-size: 0.6875rem;
+  padding-inline: 0.5rem;
+}
+
+@media (min-width: 60rem) {
+  .ripple {
+    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+    gap: var(--ui-space-xl);
+  }
+}
+
+@media (max-width: 34rem) {
+  .statSurface,
+  .socialSurface,
+  .cardSurface,
+  .phoneSurface {
+    grid-column: span 6;
+  }
+  .link {
+    display: none;
+  }
+}

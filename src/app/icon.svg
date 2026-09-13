@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .loose { fill: none; stroke: #1a1814; }
+    .set { fill: #c8361b; }
+    @media (prefers-color-scheme: dark) {
+      .loose { stroke: #f1ede4; }
+      .set { fill: #ff7152; }
+    }
+  </style>
+  <rect class="loose" x="5" y="5" width="18" height="18" rx="2" stroke-width="2.4" transform="rotate(-12 14 14)"/>
+  <rect class="set" x="11" y="11" width="17" height="17" rx="2"/>
+</svg>

@@ -1,0 +1,111 @@
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "brand . tools" "steps steps steps";
+  align-items: center;
+  column-gap: var(--ui-space-s);
+  padding-inline: var(--ui-gutter);
+  border-bottom: 1px solid var(--ui-color-border);
+  background: var(--ui-color-background);
+}
+
+.brand {
+  grid-area: brand;
+  display: flex;
+  align-items: center;
+  height: 3.5rem;
+}
+
+.tools {
+  grid-area: tools;
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3xs);
+}
+
+.steps {
+  grid-area: steps;
+  min-width: 0;
+  margin-inline: calc(var(--ui-gutter) * -1);
+  padding-inline: var(--ui-gutter);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.steps ol {
+  display: flex;
+  gap: var(--ui-space-3xs);
+  padding-bottom: var(--ui-space-2xs);
+}
+
+.step a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem 0 0.4rem;
+  border-radius: var(--ui-radius-control);
+  color: var(--ui-color-text-secondary);
+  font-size: var(--ui-text-s);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--ui-motion-fast) var(--ui-ease),
+    color var(--ui-motion-fast) var(--ui-ease);
+}
+.step a:hover {
+  background: var(--ui-color-surface-sunken);
+  color: var(--ui-color-text-primary);
+}
+
+.stepNumber {
+  display: grid;
+  place-items: center;
+  width: 1.625rem;
+  height: 1.625rem;
+  border: 1px solid var(--ui-color-border-strong);
+  border-radius: 999px;
+  font-family: var(--ui-font-mono);
+  font-size: 0.625rem;
+}
+.step[data-state="current"] a {
+  color: var(--ui-color-text-primary);
+  font-weight: 600;
+}
+.step[data-state="current"] .stepNumber {
+  border-color: var(--ui-color-accent);
+  background: var(--ui-color-accent);
+  color: var(--ui-color-accent-text);
+}
+.step[data-state="current"] a::after {
+  content: "";
+  position: absolute;
+  left: 0.4rem;
+  right: 0.75rem;
+  bottom: calc(var(--ui-space-2xs) * -1);
+  height: 2px;
+  background: var(--ui-color-accent);
+}
+
+@media (min-width: 60rem) {
+  .bar {
+    grid-template-areas: "brand steps tools";
+    height: 4rem;
+  }
+  .steps {
+    justify-self: center;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .steps ol {
+    padding: 0;
+  }
+  .step[data-state="current"] a::after {
+    /* Sits on the bar's bottom border: (bar height - link height) / 2, plus the border. */
+    bottom: calc(-0.75rem - 1px);
+  }
+}

@@ -1,0 +1,31 @@
+.footer {
+  margin-top: var(--ui-space-2xl);
+  border-top: 1px solid var(--ui-color-border);
+  font-size: var(--ui-text-s);
+  color: var(--ui-color-text-secondary);
+}
+
+.inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-s) var(--ui-space-l);
+  padding-block: var(--ui-space-l);
+}
+
+.credit {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2xs);
+}
+
+.credit a,
+.links a {
+  color: var(--ui-color-text-primary);
+}
+
+.links {
+  display: flex;
+  gap: var(--ui-space-m);
+}
