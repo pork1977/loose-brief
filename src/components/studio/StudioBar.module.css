@@ -40,7 +40,8 @@
   padding-bottom: var(--ui-space-2xs);
 }
 
-.step a {
+.step a,
+.locked {
   position: relative;
   display: flex;
   align-items: center;
@@ -56,7 +57,7 @@
     background-color var(--ui-motion-fast) var(--ui-ease),
     color var(--ui-motion-fast) var(--ui-ease);
 }
-.step a:hover {
+.step a:hover:not([aria-current]) {
   background: var(--ui-color-surface-sunken);
   color: var(--ui-color-text-primary);
 }
@@ -70,6 +71,19 @@
   border-radius: 999px;
   font-family: var(--ui-font-mono);
   font-size: 0.625rem;
+}
+.stepNumber svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+.locked {
+  opacity: 0.55;
+  cursor: default;
+}
+.step[data-state="done"] .stepNumber {
+  border-color: var(--ui-color-text-primary);
+  background: var(--ui-color-text-primary);
+  color: var(--ui-color-background);
 }
 .step[data-state="current"] a {
   color: var(--ui-color-text-primary);

@@ -135,7 +135,7 @@ These are the places where following the spec to the letter would work against t
 
 1. **Human photography for the Shared Shore direction.** The brief says to avoid corporate stock photography, and there's no image generation in the stack. Proposal: every direction's imagery is drawn in code (SVG contour lines, grain, duotone shapes coloured by the tokens), which also means imagery changes when tokens change. If Shared Shore still needs photos, a handful of free licence photos with a token driven duotone treatment could be added later. Your call when we reach Phase 4.
 2. **Logo directions.** They appear in the product pitch but not in the workflow, and the spec also warns against "generating a random logo and calling it a brand identity". Proposal: a wordmark set in the display typeface plus a simple monogram, both built from tokens. No logo generator.
-3. **Uploaded logo or image in the brief.** Stays in the browser and appears in the preview only. It isn't sent to the model, which keeps live mode cheap and avoids storing anyone's files.
+3. **Uploaded logo or image in the brief.** Superseded by the Materials feature below. Colour reading happens in the browser; sending a file to the model is opt-in per file and arrives with live mode.
 4. **Required pages.** The brief collects them, but the MVP builds one homepage, as the spec says. Nav links for the other pages will say they aren't generated in this version, not lead to empty pages.
 5. **PDF export.** Brand guidelines export as HTML with a proper print stylesheet, so "Save as PDF" in the browser gives a clean PDF. No PDF library.
 6. **Export cards that don't do anything yet** will say so on the card. Most exports are cheap to make real because the data already exists, so the aim is for all seven to work.
@@ -151,15 +151,74 @@ Each phase ends with the dev server running, the change checked in the browser, 
 | --- | --- | --- |
 | 1 | Audit | Done. This document |
 | 2 | Visual shell | Done 2026-09-13. Landing, nav, page transitions, app tokens, responsive layout, base button, card and panel. No AI |
-| 3 | Brief | Five steps, validation, live summary, "Load demo brief", project state, saved draft, safe refresh |
+| 3 | Brief | Done 2026-09-13. Five steps, validation, live summary with a rule-based personality reading, "Load demo brief", project state saved in the browser, safe refresh, and the first part of Materials (colour reading from uploaded images) |
 | 4 | Directions | zod schemas first, then three Ebbfield directions as data, cards, palette and type previews, compare mode, selection, loading state, contrast checks, identity canvas |
 | 5 | Brand system | Token model and compiler, seven tabs, colour and type editors, radius and contrast controls, dark mode, token inspector, reset |
 | 6 | Website studio | Ten section homepage, coastline visual (labelled illustrative), viewport controls, before and after |
 | 7 | Refinement engine | Nine preset commands, change preview, apply, cancel, undo, redo, command history, "show me why" |
 | 8 | Export | CSS, JSON, Tailwind, DESIGN.md, guidelines HTML, copy deck, social cards |
 | 9 | Polish | Motion, empty, loading and error states, keyboard, reduced motion, mobile, demo reset, walkthrough, architecture page |
-| 10 | Live mode | Server routes, rate limits, separate key and spend limit, cost measured |
-| 11 | Ship | Repo, Vercel, domain, README, add to pwilson.dev |
+| 10 | Live mode | Server routes, rate limits, separate key and spend limit, cost measured. Includes the AI half of Materials (see below). Paul adds the Anthropic key to `.env.local` at this point |
+| 11 | Search and AI visibility | SEO, AEO and GEO, modelled on Rival Radar (see below) |
+| 12 | Ship | Vercel project `loose-brief`, Paul's domain, README, add to pwilson.dev, then Google Search Console and Bing Webmaster Tools (Paul) |
+| 13 | Payments (maybe) | Only if live mode output is good enough to charge for. See "Payments" below |
+
+## Materials: building the brand around what people upload
+
+Paul's idea (2026-09-13): let people add things they already have and use them to shape the theme.
+
+**Phase 3 (built):** images only, read entirely in the browser. For each file Loose Brief pulls out the main colours (k-means clustering in OKLab), the exact colours written into SVG files, and plain traits (light or dark, muted or vivid, warm or cool). Each file gets a type (logo, photo, texture, screenshot), a choice between "show it on the site" and "inspiration only", "keep these colours exactly" for logos, and alt text. Files are stored in IndexedDB and never uploaded. The summary shows "colours to keep" and "colours to draw from".
+
+**Phase 10 (with live mode):** Claude reads images and PDFs directly, so no separate image model is needed. Each analysis is opt-in per file, because it means sending the file to Anthropic.
+
+| Input | What we'd get from it | Verdict |
+| --- | --- | --- |
+| Images (photos, textures) | Subject, mood, lighting, texture, era, suggested image treatment and illustration style | Yes |
+| Logo | Shape language (rounded or angular) for radius tokens, a guess at the wordmark style for type pairing, exact colours (already done) | Yes |
+| Screenshots of sites they like | Layout density, type style, colour use. Used for feel, never copied | Yes |
+| PDFs: existing brand guidelines, brochures, menus, pitch decks | Existing rules, colours, fonts, tone of voice and copy to reuse | Yes |
+| Existing copy (pasted text) | Tone of voice reading, words they use, reading level | Yes, cheap and useful |
+| Their current website address | Colours, fonts and copy tone from the live page, fetched on the server | Yes, but needs care: server-side fetching of any URL has to be locked down so it can't be pointed at internal addresses |
+| Brand colours they must keep (typed hex values) | Hard constraints for the palette | Yes, trivial |
+| Font files they own | Use in the preview only; can't be exported unless their licence allows it | Later, licensing makes it fiddly |
+| Video | A few frames analysed as images | No. Costly, and frames add little over a photo |
+| Audio or music | Nothing that maps onto a visual identity | No |
+| Social media profile links | Would mean scraping sites whose terms forbid it | No. Screenshots do the same job |
+
+Things to keep in mind: people's photos may show other people, so uploads sent to the model should be deleted straight after analysis; the per-file consent needs to be clear; and every direction should say what it drew from ("navy from your logo, warm light from the harbour photo"), which is also the spec's "show me why".
+
+## Search and AI visibility (Phase 11)
+
+Paul wants this fully SEO, AEO and GEO ready, following Rival Radar. Rival Radar has, and this should get:
+
+- `robots.ts` allowing crawlers (AI ones included) and blocking private routes. Here that's the studio stages, which hold no content, plus `/api/`.
+- `sitemap.ts` covering only the public pages.
+- `llms.txt` and `llms-full.txt` in `public/`, plus `.well-known/ai.txt`.
+- An IndexNow key file and a `submit-indexnow` script for Bing.
+- JSON-LD: Organization, WebSite and SoftwareApplication on the home page, HowTo for the five stages, BreadcrumbList and Article on content pages. FAQPage only if there's a real FAQ to back it.
+- Open Graph images per page.
+- Canonicals and per-page titles and descriptions.
+- A small guides section with genuinely useful articles (for example "What are design tokens?", "How to write a brand brief", "Choosing accessible brand colours"), since content is what answer engines quote. Rival Radar has ten.
+- Privacy, terms and contact pages, which are needed anyway once there's live AI and file uploads.
+
+Paul adds the site to Google Search Console and Bing Webmaster Tools once it's live.
+
+## Payments (Phase 13, undecided)
+
+Paul may add a cheap one-off payment to cover AI costs, and is unsure what a buyer would get or whether the output is accurate enough to charge for. The answer to the second question comes from live mode, so nothing here gets built before that.
+
+Suggested shape, for discussion:
+
+- **Free:** the Ebbfield demo end to end, writing a brief, colour reading from uploads. This is the proof of quality.
+- **Paid, once per brand:** generating three directions from their own brief (with image and PDF analysis), a few regenerations, a set number of Creative Director requests, and the full export: tokens, Tailwind theme, DESIGN.md, brand guidelines, social cards and the homepage as downloadable code.
+- **Price:** somewhere around £9 to £19. Card fees take a fixed amount per payment (Stripe's UK rate is roughly 1.5% plus 20p, worth checking on their pricing page), so very low prices lose a big share to fees. The real cost per brand has to be measured in Phase 10 first; the price should cover it several times over, since some people will regenerate a lot.
+
+What it drags in, which is more than the payment itself:
+
+- A way back to a paid project: at least an email and a magic link, which means storing projects on a server (Supabase, as on Rival Radar) rather than only in the browser.
+- VAT on digital sales, including to EU customers. A merchant of record such as Paddle or Lemon Squeezy handles that for a higher fee (around 5% plus 50c); plain Stripe leaves it to you.
+- UK consumer rules for digital content: the 14-day cancellation right only falls away if the buyer explicitly agrees to immediate delivery at checkout.
+- Terms, a privacy policy, and a refund approach for output someone thinks is poor.
 
 ## Definition of done
 

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { fontVariables } from "@/lib/fonts";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
 import "./globals.css";
+import "./forms.css";
 
 export const metadata: Metadata = {
   title: {

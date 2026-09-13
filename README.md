@@ -13,7 +13,7 @@ npm run dev
 
 Then open http://localhost:3400.
 
-Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`.
+Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`, `npm test`.
 
 ## Where things live
 
@@ -23,6 +23,10 @@ Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`.
 | `src/app/(studio)` | The five project stages: brief, directions, brand system, studio, export |
 | `src/lib/tokens.ts` | The brand token model and the compiler that turns it into CSS variables |
 | `src/lib/brand-fonts.ts` | The curated fonts a brand can use |
+| `src/lib/brief.ts` | The brief schema and the checks for each step |
+| `src/lib/palette.ts` | Colour extraction from uploaded images, run in the browser |
+| `src/state` | Project state: a pure reducer, and a store that saves it in the browser and restores it safely |
+| `src/data/demo-brief.ts` | The Ebbfield demo brief |
 | `src/data/demo-directions.ts` | The three built-in directions for Ebbfield, the fictional demo brand |
 | `src/components/brand` | Components that only read brand tokens |
 | `src/components/ui` | Loose Brief's own buttons, cards and panels |

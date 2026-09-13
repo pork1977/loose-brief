@@ -1,0 +1,298 @@
+/*
+ * Form controls. Same layer as the other components in globals.css.
+ * Error states always pair the colour with an icon and a written message.
+ */
+
+@layer components {
+  .ui-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+  }
+
+  .ui-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--ui-space-s);
+    font-size: var(--ui-text-s);
+    font-weight: 600;
+    color: var(--ui-color-text-primary);
+  }
+  .ui-field > legend.ui-label {
+    width: 100%;
+    margin-bottom: 0.4rem;
+    padding: 0;
+  }
+  .ui-label__optional {
+    font-weight: 400;
+    color: var(--ui-color-text-muted);
+  }
+
+  .ui-hint {
+    font-size: var(--ui-text-xs);
+    line-height: 1.5;
+    color: var(--ui-color-text-secondary);
+  }
+
+  .ui-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-size: var(--ui-text-xs);
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--ui-color-error);
+  }
+  .ui-error::before {
+    content: "!";
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.05rem;
+    border-radius: 999px;
+    background: var(--ui-color-error);
+    color: var(--ui-color-surface-raised);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .ui-counter {
+    font-family: var(--ui-font-mono);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    color: var(--ui-color-text-muted);
+  }
+  .ui-counter[data-over="true"] {
+    color: var(--ui-color-error);
+    font-weight: 600;
+  }
+
+  .ui-input,
+  .ui-textarea,
+  .ui-select {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--ui-color-border-strong);
+    border-radius: var(--ui-radius-control);
+    background: var(--ui-color-surface-raised);
+    color: var(--ui-color-text-primary);
+    font-size: var(--ui-text-m);
+    line-height: 1.45;
+    transition:
+      border-color var(--ui-motion-fast) var(--ui-ease),
+      box-shadow var(--ui-motion-fast) var(--ui-ease);
+  }
+  .ui-textarea {
+    min-height: 7rem;
+    resize: vertical;
+  }
+  .ui-input::placeholder,
+  .ui-textarea::placeholder {
+    color: var(--ui-color-text-muted);
+    opacity: 1;
+  }
+  .ui-input:hover,
+  .ui-textarea:hover,
+  .ui-select:hover {
+    border-color: var(--ui-color-text-secondary);
+  }
+  .ui-input:focus-visible,
+  .ui-textarea:focus-visible,
+  .ui-select:focus-visible {
+    outline: none;
+    border-color: var(--ui-color-accent);
+    box-shadow: 0 0 0 3px var(--ui-color-accent-soft);
+  }
+  .ui-input[aria-invalid="true"],
+  .ui-textarea[aria-invalid="true"] {
+    border-color: var(--ui-color-error);
+    box-shadow: 0 0 0 3px var(--ui-color-error-soft);
+  }
+  .ui-input--small,
+  .ui-select--small {
+    min-height: 2.25rem;
+    padding: 0.35rem 0.6rem;
+    font-size: var(--ui-text-s);
+  }
+
+  /* Toggle chips: real checkboxes or radios, styled. */
+  .ui-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .ui-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.25rem;
+    padding: 0 0.8rem;
+    border: 1px solid var(--ui-color-border-strong);
+    border-radius: 999px;
+    background: var(--ui-color-surface-raised);
+    font-size: var(--ui-text-s);
+    cursor: pointer;
+    user-select: none;
+    transition:
+      border-color var(--ui-motion-fast) var(--ui-ease),
+      background-color var(--ui-motion-fast) var(--ui-ease);
+  }
+  .ui-toggle input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: inherit;
+  }
+  .ui-toggle:hover {
+    border-color: var(--ui-color-text-secondary);
+  }
+  .ui-toggle:has(input:checked) {
+    border-color: var(--ui-color-text-primary);
+    background: var(--ui-color-text-primary);
+    color: var(--ui-color-background);
+  }
+  /* A tick as well as the fill, so the choice doesn't rest on colour alone. */
+  .ui-toggle:has(input:checked)::before {
+    content: "";
+    width: 0.35rem;
+    height: 0.6rem;
+    margin: -0.15rem 0.1rem 0 0;
+    border: solid currentColor;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .ui-toggle:has(input:focus-visible) {
+    outline: 2px solid var(--ui-color-accent);
+    outline-offset: 2px;
+  }
+  .ui-toggle:has(input:disabled) {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* Tags added by the visitor */
+  .ui-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .ui-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 2rem;
+    padding: 0 0.25rem 0 0.7rem;
+    border-radius: 999px;
+    background: var(--ui-color-surface-sunken);
+    font-size: var(--ui-text-s);
+  }
+  .ui-tag button {
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ui-color-text-secondary);
+  }
+  .ui-tag button:hover {
+    background: var(--ui-color-border);
+    color: var(--ui-color-text-primary);
+  }
+  .ui-tag button svg {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+
+  .ui-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .ui-suggestion {
+    min-height: 1.875rem;
+    padding: 0 0.6rem;
+    border: 1px dashed var(--ui-color-border-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-text-xs);
+  }
+  .ui-suggestion:hover {
+    border-style: solid;
+    color: var(--ui-color-text-primary);
+  }
+
+  /* Notices */
+  .ui-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ui-space-xs);
+    padding: var(--ui-space-xs) var(--ui-space-s);
+    border: 1px solid var(--ui-color-border-strong);
+    border-left: 3px solid var(--ui-color-accent);
+    border-radius: var(--ui-radius-control);
+    background: var(--ui-color-surface-raised);
+    font-size: var(--ui-text-s);
+  }
+  .ui-notice--error {
+    border-left-color: var(--ui-color-error);
+    background: var(--ui-color-error-soft);
+  }
+  .ui-notice > :first-child {
+    flex: 1;
+  }
+
+  /* Dialog */
+  .ui-dialog {
+    width: min(28rem, calc(100vw - 2rem));
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--ui-color-border-strong);
+    border-radius: var(--ui-radius-panel);
+    background: var(--ui-color-surface-raised);
+    color: var(--ui-color-text-primary);
+    box-shadow: var(--ui-shadow-panel);
+  }
+  .ui-dialog::backdrop {
+    background: rgb(18 17 15 / 0.45);
+  }
+  .ui-dialog[open] {
+    animation: lb-dialog-in var(--ui-motion-normal) var(--ui-ease);
+  }
+  .ui-dialog__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-xs);
+    padding: var(--ui-space-m);
+  }
+  .ui-dialog__title {
+    font-size: var(--ui-text-l);
+  }
+  .ui-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ui-space-2xs);
+    padding: var(--ui-space-s) var(--ui-space-m);
+    border-top: 1px solid var(--ui-color-border);
+  }
+
+  @keyframes lb-dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
+}
