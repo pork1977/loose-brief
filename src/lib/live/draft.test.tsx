@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { DEMO_BRIEF } from "../../data/demo-brief";
 import { DEMO_DIRECTIONS } from "../../data/demo-directions";
+import { DEMO_DIRECTION_IDS, isDemoDirection } from "../../data/demo-ids";
+import { buildStaticSite } from "../export/site";
 import { runContrastChecks } from "../accessibility";
 import { directionSchema } from "../direction";
 import { sectionOf } from "../website";
@@ -18,9 +20,17 @@ test("every built-in direction survives the round trip through a draft", () => {
   }
 });
 
-test("a generated site hides the Ebbfield coastline explorer", () => {
-  const rebuilt = assembleDirection({ draft: toDraft(DEMO_DIRECTIONS[0]), letter: "A", visual: "contours", brief: DEMO_BRIEF });
-  assert.equal(sectionOf(rebuilt.website, "data").hidden, true);
+test("a generated site hides the Ebbfield coastline explorer and its labels", () => {
+  assert.deepEqual([...DEMO_DIRECTION_IDS], DEMO_DIRECTIONS.map((d) => d.id));
+  for (const visual of ["contours", "grid", "soft"] as const) {
+    const rebuilt = assembleDirection({ draft: toDraft(DEMO_DIRECTIONS[0]), letter: "A", visual, brief: DEMO_BRIEF });
+    assert.equal(sectionOf(rebuilt.website, "data").hidden, true);
+    assert.equal(isDemoDirection(rebuilt.id), false);
+    const { "index.html": html } = buildStaticSite({ brandName: "Crumb Lane", direction: rebuilt, followSystem: false });
+    const hero = /<div class="ws-hero-visual">[\s\S]*?<\/div>/.exec(html)?.[0] ?? "";
+    assert.ok(hero, visual);
+    assert.doesNotMatch(hero, /m\/yr|Illustrative|coastline|<text/i, visual);
+  }
 });
 
 test("sloppy model output is tidied: long text, bad colours, unknown fonts and presets", () => {

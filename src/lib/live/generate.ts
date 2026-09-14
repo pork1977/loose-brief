@@ -1,11 +1,29 @@
 import { z } from "zod";
 import type { BriefDraft } from "../brief";
-import { directionSetSchema, type Direction } from "../direction";
+import { directionSchema, directionSetSchema, type Direction } from "../direction";
+import { getPath, setPath } from "../tokens";
 import { CHANGE_TYPES, areaFor } from "../refinement";
 import { applyBrandChanges, type BrandChange } from "../../state/project";
 import { SECTION_ORDER } from "../website";
-import { DraftError, assembleDirection, assignVisuals, directionDraftSchema, leadMode, planSchema } from "./draft";
-import { DIRECTIONS_SYSTEM, PLAN_INSTRUCTION, REFINE_SYSTEM, briefBlock, directionInstruction, type ImageNote } from "./prompts";
+import {
+  BRAND_KEYS,
+  COPY_KEYS,
+  DraftError,
+  assembleDirection,
+  assignVisuals,
+  brandPartSchema,
+  copyPartSchema,
+  isCopyProblem,
+  leadMode,
+  planSchema,
+  type BrandPart,
+} from "./draft";
+import { BRAND_PART_INSTRUCTION, DIRECTIONS_SYSTEM, PLAN_INSTRUCTION, REFINE_SYSTEM, briefBlock, copyPartInstruction, directionInstruction, type ImageNote } from "./prompts";
+
+/** Keep only the expected keys, so a reply can't smuggle fields in from the other half. */
+function pick<T extends object, K extends keyof T>(value: T, keys: readonly K[]): Pick<T, K> {
+  return Object.fromEntries(keys.map((k) => [k, value[k]])) as Pick<T, K>;
+}
 import type { DirectionsEvent, RefineRequest, RefineResponse } from "./protocol";
 
 /*
@@ -16,7 +34,7 @@ import type { DirectionsEvent, RefineRequest, RefineResponse } from "./protocol"
 
 export type Block = { type: "text"; text: string; cache?: boolean } | { type: "image"; mediaType: string; data: string };
 
-export type ModelCall = <T>(request: { step: "plan" | "direction" | "refine"; system: string; blocks: Block[]; schema: z.ZodType<T>; maxTokens: number }) => Promise<T>;
+export type ModelCall = <T>(request: { step: "plan" | "brand" | "copy" | "refine"; system: string; blocks: Block[]; schema: z.ZodType<T>; maxTokens: number }) => Promise<T>;
 
 /** A failure worth telling the visitor about in plain words. */
 export class LiveError extends Error {}
@@ -50,23 +68,44 @@ export async function runDirections({ brief, images, call, emit }: DirectionsInp
   const visuals = assignVisuals(routes);
   const mode = leadMode(brief);
 
-  const writeOne = async (index: number): Promise<Direction> => {
+  const writeOne = async (index: number, onBrand?: () => void): Promise<Direction> => {
     const route = routes[index];
     const others = routes.filter((_, i) => i !== index);
     const instruction = directionInstruction(route, others, letters[index], mode);
-    const ask = (extra = "") =>
-      call({ step: "direction", system: DIRECTIONS_SYSTEM, blocks: [...shared, { type: "text", text: instruction + extra }], schema: directionDraftSchema, maxTokens: 12000 });
+    const fix = (problems: string[]) => (problems.length ? `\n\nA previous attempt had these problems. Fix all of them:\n- ${problems.join("\n- ")}` : "");
 
-    let draft = await ask();
+    const askBrand = async (problems: string[] = []) =>
+      pick(
+        await call({ step: "brand", system: DIRECTIONS_SYSTEM, blocks: [...shared, { type: "text", text: `${instruction}\n\n${BRAND_PART_INSTRUCTION}${fix(problems)}` }], schema: brandPartSchema, maxTokens: 8000 }),
+        BRAND_KEYS,
+      );
+    const askCopy = async (brand: BrandPart, problems: string[] = []) =>
+      pick(
+        await call({
+          step: "copy",
+          system: DIRECTIONS_SYSTEM,
+          blocks: [...shared, { type: "text", text: `${instruction}\n\n${copyPartInstruction(brand)}${fix(problems)}` }],
+          schema: copyPartSchema,
+          maxTokens: 10000,
+        }),
+        COPY_KEYS,
+      );
+
+    let brand = await askBrand();
+    onBrand?.();
+    let copy = await askCopy(brand);
+    const assemble = () => assembleDirection({ draft: { ...brand, ...copy }, letter: letters[index], visual: visuals[index], brief });
     try {
-      return assembleDirection({ draft, letter: letters[index], visual: visuals[index], brief });
+      return assemble();
     } catch (error) {
       if (!(error instanceof DraftError)) throw error;
-      // One more go, telling Claude exactly what didn't pass.
+      // One more go at whichever half failed, telling Claude exactly what didn't pass.
       emit({ type: "retry", index });
-      draft = await ask(`\n\nA previous attempt at this direction had these problems. Fix all of them:\n- ${error.problems.join("\n- ")}`);
+      const brandProblems = error.problems.filter((p) => !isCopyProblem(p));
+      if (brandProblems.length) brand = await askBrand(brandProblems);
+      copy = await askCopy(brand, error.problems.filter(isCopyProblem));
       try {
-        return assembleDirection({ draft, letter: letters[index], visual: visuals[index], brief });
+        return assemble();
       } catch (second) {
         if (second instanceof DraftError) throw new LiveError(`Direction ${letters[index]} still didn't pass the checks after a second try.`);
         throw second;
@@ -74,13 +113,27 @@ export async function runDirections({ brief, images, call, emit }: DirectionsInp
     }
   };
 
-  const directions = await Promise.all(
-    routes.map(async (_, index) => {
-      const direction = await writeOne(index);
-      emit({ type: "direction", index, direction });
-      return direction;
-    }),
-  );
+  const finish = async (index: number, onBrand?: () => void) => {
+    const direction = await writeOne(index, onBrand);
+    emit({ type: "direction", index, direction });
+    return direction;
+  };
+
+  /*
+   * Each kind of request caches its own prefix (the reply schema counts as part
+   * of it), and requests that start at the same moment all pay to write the
+   * cache rather than read it. So direction A's brand request goes first, and B
+   * and C start once it's back, reading what A wrote. Their word requests then
+   * start after A's has begun, so they read its cache too. It costs a few
+   * seconds and cuts the input cost of a run by about two thirds.
+   */
+  let brandDone!: () => void;
+  const firstBrand = new Promise<void>((resolve) => (brandDone = resolve));
+  const first = finish(0, brandDone);
+  // If A fails outright, don't leave B and C waiting; Promise.all below reports the failure.
+  first.catch(() => brandDone());
+  await firstBrand;
+  const directions = await Promise.all([first, finish(1), finish(2)]);
 
   const set = directionSetSchema.safeParse(directions);
   if (!set.success) throw new LiveError("The three directions didn't fit together (two came back the same).");
@@ -117,9 +170,45 @@ function parseValue(raw: string): unknown {
   }
 }
 
+const isPlainObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+
+function mergeInto(current: unknown, next: unknown): unknown {
+  if (!isPlainObject(current) || !isPlainObject(next)) return next;
+  return Object.fromEntries(Object.keys(current).map((k) => [k, k in next ? mergeInto(current[k], next[k]) : current[k]]));
+}
+
+const upperHex = (v: unknown): unknown =>
+  typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? v.toUpperCase() : Array.isArray(v) ? v.map(upperHex) : isPlainObject(v) ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, upperHex(x)])) : v;
+
+/**
+ * Tidy the slips that aren't worth a second request: colours in lower case, and
+ * a group given with only some of its values (which fills in from what's there).
+ */
+export function normaliseChange(direction: Direction, path: string, raw: string): BrandChange {
+  let value = upperHex(parseValue(raw));
+  try {
+    value = mergeInto(getPath(direction, path), value);
+  } catch {
+    // The path doesn't exist; applyBrandChanges will say so.
+  }
+  return { path, value };
+}
+
 /** Which proposed changes fail on their own, so a retry can be told exactly what to fix. */
 function diagnose(direction: Direction, changes: BrandChange[]): string[] {
-  return changes.flatMap((change) => (applyBrandChanges(direction, [change]) ? [] : [`"${change.path}" set to ${JSON.stringify(change.value).slice(0, 80)} isn't allowed (the path doesn't exist, isn't editable, or the value breaks a rule)`]));
+  return changes.flatMap((change) => {
+    if (applyBrandChanges(direction, [change])) return [];
+    const shown = `"${change.path}" set to ${JSON.stringify(change.value).slice(0, 80)}`;
+    let reason = "the path doesn't exist or can't be edited";
+    try {
+      getPath(direction, change.path);
+      const issue = directionSchema.safeParse(setPath(direction, change.path, change.value)).error?.issues[0];
+      reason = issue ? `${issue.path.join(".")}: ${issue.message}` : "it's the same as the current value";
+    } catch {
+      // keep the default reason
+    }
+    return [`${shown} isn't allowed (${reason})`];
+  });
 }
 
 export async function runRefine({ request, direction, brief }: RefineRequest, call: ModelCall): Promise<RefineResponse> {
@@ -138,10 +227,11 @@ export async function runRefine({ request, direction, brief }: RefineRequest, ca
   let draft = await call({ step: "refine", system: REFINE_SYSTEM, blocks: blocks(), schema: refineDraftSchema, maxTokens: 6000 });
   if (!draft.possible || !draft.changes.length) return { ok: true, possible: false, text: draft.summary || "I can't do that one by changing this brand." };
 
-  let changes: BrandChange[] = draft.changes.map((c) => ({ path: c.path.trim(), value: parseValue(c.value) }));
+  let changes: BrandChange[] = draft.changes.map((c) => normaliseChange(direction, c.path.trim(), c.value));
   let applied = applyBrandChanges(direction, changes);
   if (!applied) {
     const problems = diagnose(direction, changes);
+    console.warn(`[live/refine] first answer rejected: ${problems.join(" | ") || "the changes only fail together"}`);
     draft = await call({
       step: "refine",
       system: REFINE_SYSTEM,
@@ -150,7 +240,7 @@ export async function runRefine({ request, direction, brief }: RefineRequest, ca
       maxTokens: 6000,
     });
     if (!draft.possible || !draft.changes.length) return { ok: true, possible: false, text: draft.summary || "I can't do that one by changing this brand." };
-    changes = draft.changes.map((c) => ({ path: c.path.trim(), value: parseValue(c.value) }));
+    changes = draft.changes.map((c) => normaliseChange(direction, c.path.trim(), c.value));
     applied = applyBrandChanges(direction, changes);
   }
   if (!applied) return { ok: false, message: "Claude suggested changes that didn't pass the brand's checks, so nothing was changed. Try wording it differently." };

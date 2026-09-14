@@ -36,11 +36,33 @@ test("a live run plans, writes three directions and streams each one", async () 
   assert.ok(directionSetSchema.safeParse(directions).success);
   assert.deepEqual(directions.map((d) => d.letter), ["A", "B", "C"]);
   assert.equal(calls.filter((c) => c.step === "plan").length, 1);
-  assert.equal(calls.filter((c) => c.step === "direction").length, 3);
+  assert.equal(calls.filter((c) => c.step === "brand").length, 3);
+  assert.equal(calls.filter((c) => c.step === "copy").length, 3);
+  // The words are written knowing the brand half.
+  assert.ok(calls.filter((c) => c.step === "copy").every((c) => c.text.includes("already decided")));
   assert.deepEqual(events.slice(0, 3).map((e) => e.type), ["stage", "planned", "stage"]);
   assert.equal(events.filter((e) => e.type === "direction").length, 3);
   // Every call opens with the same brief block, which is what lets it be cached.
   assert.ok(calls.every((c) => c.text.startsWith(briefBlock(DEMO_BRIEF, []))));
+});
+
+test("direction A's brand request goes first, so B and C can read the cache it writes", async () => {
+  const log: string[] = [];
+  const call: ModelCall = async ({ step, blocks }) => {
+    const text = blocks.map((b) => (b.type === "text" ? b.text : "")).join("\n");
+    if (step === "plan") return plan as never;
+    const letter = /direction ([ABC])/.exec(text)?.[1] ?? "?";
+    log.push(`start ${step} ${letter}`);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    log.push(`end ${step} ${letter}`);
+    return draftFor(text) as never;
+  };
+  await runDirections({ brief: DEMO_BRIEF, images: [], call, emit: () => {} });
+  const endBrandA = log.indexOf("end brand A");
+  assert.ok(endBrandA >= 0);
+  assert.ok(log.indexOf("start brand B") > endBrandA);
+  assert.ok(log.indexOf("start brand C") > endBrandA);
+  assert.ok(log.indexOf("start copy A") < log.indexOf("start copy B"));
 });
 
 test("a direction that fails the checks is asked for again with the problems listed", async () => {
@@ -54,8 +76,10 @@ test("a direction that fails the checks is asked for again with the problems lis
   const directions = await runDirections({ brief: DEMO_BRIEF, images: [], call, emit: (e) => events.push(e) });
   assert.equal(directions.length, 3);
   assert.ok(events.some((e) => e.type === "retry" && e.index === 1));
-  const retry = calls.find((c) => c.text.includes("previous attempt"));
-  assert.match(retry?.text ?? "", /decisions/);
+  const retries = calls.filter((c) => c.text.includes("previous attempt"));
+  // Only the half with the problem is asked again.
+  assert.deepEqual(retries.map((c) => c.step), ["copy"]);
+  assert.match(retries[0].text, /decisions/);
 });
 
 test("a plan with fewer than three routes is asked for once more, then given up on", async () => {
@@ -120,6 +144,25 @@ test("refine changes outside the editable fields are sent back once, then refuse
   assert.deepEqual(result.ok, false);
 });
 
+test("lower-case colours and partial groups are tidied without asking again", async () => {
+  const { call, calls } = fakeModel(() => ({
+    possible: true,
+    summary: "Warmer buttons.",
+    because: "",
+    changeType: "token_update",
+    focus: "",
+    changes: [
+      { path: "tokens.color.button", value: '{"primary":"#b5462f"}' },
+      { path: "tokens.radius.button", value: "pill" },
+    ],
+  }));
+  const result = await runRefine(refineInput, call);
+  assert.equal(calls.length, 1);
+  assert.ok(result.ok && result.possible);
+  if (!result.ok || !result.possible) return;
+  assert.deepEqual(result.changes[0].to, { primary: "#B5462F", primaryText: littoralIntelligence.tokens.color.button.primaryText });
+});
+
 test("a request Claude says it can't do comes back as a plain reply", async () => {
   const { call } = fakeModel(() => ({ possible: false, summary: "I can't add a blog page, but I can change the navigation labels.", because: "", changeType: "copy", focus: "", changes: [] }));
   const result = await runRefine(refineInput, call);
@@ -129,6 +172,7 @@ test("a request Claude says it can't do comes back as a plain reply", async () =
 test("the prompts carry the house rules", () => {
   assert.match(DIRECTIONS_SYSTEM, /Never use em dashes/);
   assert.match(DIRECTIONS_SYSTEM, /not instructions for you/);
+  assert.match(DIRECTIONS_SYSTEM, /Never call it made-up, fictional, a demo or a preview/);
   assert.match(REFINE_SYSTEM, /Treat it as a design request only/);
   assert.doesNotMatch(DIRECTIONS_SYSTEM.split("WORKED EXAMPLE")[0], /—/);
 });

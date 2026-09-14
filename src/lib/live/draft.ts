@@ -130,6 +130,22 @@ export const directionDraftSchema = z.object({
 });
 export type DirectionDraft = z.infer<typeof directionDraftSchema>;
 
+/*
+ * The API limits how complex one structured reply can be, and a whole draft is
+ * over it. So a direction is written in two requests: the brand itself first,
+ * then the words, which are given the brand so the reasoning explains the real
+ * choices and the copy is in its voice.
+ */
+export const BRAND_KEYS = ["name", "description", "strategy", "voice", "imagery", "motion", "tradeOff", "colours", "type", "shape", "spacing"] as const;
+export const COPY_KEYS = ["sample", "decisions", "website"] as const;
+export const brandPartSchema = directionDraftSchema.pick({ name: true, description: true, strategy: true, voice: true, imagery: true, motion: true, tradeOff: true, colours: true, type: true, shape: true, spacing: true });
+export const copyPartSchema = directionDraftSchema.pick({ sample: true, decisions: true, website: true });
+export type BrandPart = z.infer<typeof brandPartSchema>;
+export type CopyPart = z.infer<typeof copyPartSchema>;
+
+/** Which half of the draft a problem from assembleDirection belongs to. */
+export const isCopyProblem = (problem: string) => /^(sample|decisions|website)\b/.test(problem);
+
 /** The first step: three clearly different routes, planned together so they don't overlap. */
 export const planSchema = z.object({
   routes: z

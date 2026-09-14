@@ -46,7 +46,8 @@ export function anthropicCall({ usage, signal, tag }: { usage: Usage; signal?: A
       {
         model: LIVE_MODEL,
         max_tokens: maxTokens,
-        output_config: { effort: step === "plan" ? "low" : "medium", format: zodOutputFormat(schema) },
+        // Writing a direction gets more thought; planning and single edits don't need it, and it keeps them quick.
+        output_config: { effort: step === "brand" || step === "copy" ? "medium" : "low", format: zodOutputFormat(schema) },
         // The system prompt is identical on every request, so it's cached and later calls pay a fraction for it.
         system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content: toContent(blocks) }],
@@ -86,9 +87,9 @@ function fakeCall(signal?: AbortSignal): ModelCall {
       await wait(2500);
       return { routes: DEMO_DIRECTIONS.map((d) => ({ name: d.name, idea: d.description, visual: d.visual, colour: "", type: "", voice: "", differs: "" })) } as never;
     }
-    if (step === "direction") {
+    if (step === "brand" || step === "copy") {
       const index = "ABC".indexOf(/direction ([ABC])/.exec(text)?.[1] ?? "A");
-      await wait(4000 + index * 2500);
+      await wait(2000 + index * 1500);
       return toDraft(DEMO_DIRECTIONS[index]) as never;
     }
     await wait(2000);

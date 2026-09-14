@@ -22,7 +22,12 @@ const POINTS = [
   { x: 214, y: 214, id: "T-03", label: "+0.2 m/yr" },
 ];
 
-export function CoastlineVisual({ style, className }: { style: VisualStyle; className?: string }) {
+/**
+ * `abstract` is for generated brands: the same shapes, but without the
+ * coastline's measurement labels, and treated as decoration rather than a
+ * diagram, since the coast means nothing to a bakery.
+ */
+export function CoastlineVisual({ style, className, abstract = false }: { style: VisualStyle; className?: string; abstract?: boolean }) {
   return (
     <>
     <SiteStyles />
@@ -30,11 +35,10 @@ export function CoastlineVisual({ style, className }: { style: VisualStyle; clas
       className={[styles.visual, className].filter(Boolean).join(" ")}
       viewBox="0 0 400 260"
       preserveAspectRatio="xMidYMid slice"
-      role="img"
-      aria-label="Illustrative diagram of a coastline with measured points of change. Not real data."
+      {...(abstract ? { "aria-hidden": true } : { role: "img", "aria-label": "Illustrative diagram of a coastline with measured points of change. Not real data." })}
     >
       {style === "contours" && <Contours />}
-      {style === "grid" && <Grid />}
+      {style === "grid" && <Grid labels={!abstract} />}
       {style === "soft" && <Soft />}
     </svg>
     </>
@@ -65,7 +69,7 @@ function Contours() {
   );
 }
 
-function Grid() {
+function Grid({ labels }: { labels: boolean }) {
   return (
     <g>
       <defs>
@@ -87,12 +91,14 @@ function Grid() {
       {POINTS.map((p) => (
         <g key={p.id}>
           <rect x={p.x - 4} y={p.y - 4} width="8" height="8" className={styles.gridPoint} />
-          <text x={p.x + 10} y={p.y - 2} className={styles.gridLabel}>
-            <tspan>{p.id}</tspan>
-            <tspan x={p.x + 10} dy="11">
-              {p.label}
-            </tspan>
-          </text>
+          {labels ? (
+            <text x={p.x + 10} y={p.y - 2} className={styles.gridLabel}>
+              <tspan>{p.id}</tspan>
+              <tspan x={p.x + 10} dy="11">
+                {p.label}
+              </tspan>
+            </text>
+          ) : null}
         </g>
       ))}
     </g>

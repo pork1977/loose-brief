@@ -2,6 +2,7 @@
 
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { CoastlineVisual } from "@/components/brand/CoastlineVisual";
+import { isDemoDirection } from "@/data/demo-ids";
 import type { Direction } from "@/lib/direction";
 import { navTarget, type Section, type SectionOf } from "@/lib/website";
 import { CoastlineExplorer } from "./CoastlineExplorer";
@@ -198,8 +199,14 @@ function Hero({ direction }: { direction: Direction }) {
         </div>
       </div>
       <div className={styles.heroVisual} data-tokens="--color-surface --color-border --radius-card --shadow-card --color-brand-primary --color-brand-secondary --color-brand-accent">
-        <CoastlineVisual style={visual} />
-        <span className={styles.caption}>Illustrative</span>
+        {isDemoDirection(direction.id) ? (
+          <>
+            <CoastlineVisual style={visual} />
+            <span className={styles.caption}>Illustrative</span>
+          </>
+        ) : (
+          <CoastlineVisual style={visual} abstract />
+        )}
       </div>
     </section>
   );
