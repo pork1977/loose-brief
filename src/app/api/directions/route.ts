@@ -3,6 +3,7 @@ import { anthropicCall, emptyUsage, friendlyError, isLiveConfigured, LIVE_MODEL 
 import { runDirections } from "@/lib/live/generate";
 import { clientIp, directionsLimit, limitMessage } from "@/lib/live/limits";
 import { directionsRequestSchema, type DirectionsEvent } from "@/lib/live/protocol";
+import { readSite } from "@/lib/live/site-fetch";
 
 /*
  * POST /api/directions
@@ -56,7 +57,15 @@ export async function POST(request: Request) {
         }
       };
       try {
-        const directions = await runDirections({ brief, images: notes, call: anthropicCall({ usage, signal: request.signal, tag: "directions" }), emit });
+        let site = null;
+        if (brief.currentSite.trim()) {
+          site = await readSite(brief.currentSite, request.signal).catch((error) => {
+            console.warn(`[live/directions] couldn't read the current site: ${error instanceof Error ? error.message : error}`);
+            return null;
+          });
+          if (!site) emit({ type: "notice", message: "Your current website couldn't be read (it may block automated visits), so the directions were written without it." });
+        }
+        const directions = await runDirections({ brief, images: notes, site, call: anthropicCall({ usage, signal: request.signal, tag: "directions" }), emit });
         emit({ type: "done", directions, model: LIVE_MODEL });
       } catch (error) {
         emit({ type: "error", message: friendlyError(error, "directions").message });

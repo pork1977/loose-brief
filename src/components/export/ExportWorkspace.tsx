@@ -5,8 +5,11 @@ import { BrandScope } from "@/components/brand/BrandScope";
 import { ScaledPreview } from "@/components/brand/ScaledPreview";
 import { ButtonLink } from "@/components/ui/Button";
 import { Website } from "@/components/website/Website";
+import { SiteMediaContext } from "@/components/website/WebsiteContext";
 import { isDemoBrief } from "@/data/demo-brief";
-import { everythingZip, exportFileName, siteFiles, siteZip, textExports } from "@/lib/export/bundle";
+import { EMPTY_BRIEF } from "@/lib/brief";
+import { everythingZip, exportFileName, siteFiles, siteZip, textExports, type ExportMedia } from "@/lib/export/bundle";
+import { mediaMaterials, siteMediaFiles, useSiteMediaUrls } from "@/lib/site-media";
 import { SOCIAL_FORMATS, canvasToPng, drawSocialCard, type SocialFormat } from "@/lib/export/social";
 import { useProject } from "@/state/project-store";
 import styles from "./ExportWorkspace.module.css";
@@ -53,7 +56,24 @@ function Workspace() {
   const [error, setError] = useState<string | null>(null);
   const canvases = useRef<Partial<Record<SocialFormat, HTMLCanvasElement | null>>>({});
 
-  const input = useMemo(() => (direction && brief ? { brandName, direction, brief } : null), [brandName, direction, brief]);
+  const previewMedia = useSiteMediaUrls(brief ?? EMPTY_BRIEF);
+  // The image files for the download, read once from this browser's storage whenever the brief's choices change.
+  const [siteMedia, setSiteMedia] = useState<ExportMedia | undefined>(undefined);
+  const mediaKey = brief ? JSON.stringify(mediaMaterials(brief)) : "";
+  useEffect(() => {
+    if (!brief) return;
+    let cancelled = false;
+    void siteMediaFiles(brief).then((loaded) => {
+      if (!cancelled) setSiteMedia(loaded);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // mediaKey stands for the parts of the brief this reads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaKey]);
+
+  const input = useMemo(() => (direction && brief ? { brandName, direction, brief, siteMedia } : null), [brandName, direction, brief, siteMedia]);
   const text = useMemo(() => (input ? textExports(input) : null), [input]);
   const site = useMemo(() => (input ? siteFiles(input) : null), [input]);
 
@@ -137,7 +157,9 @@ function Workspace() {
         <article className={`${styles.card} ${styles.featured}`} aria-labelledby="export-site">
           <BrandScope tokens={direction.tokens} className={styles.sitePreview}>
             <ScaledPreview designWidth={1280} designHeight={820} label={`${brandName} homepage`}>
-              <Website brandName={brandName} direction={direction} />
+              <SiteMediaContext.Provider value={previewMedia}>
+                <Website brandName={brandName} direction={direction} />
+              </SiteMediaContext.Provider>
             </ScaledPreview>
           </BrandScope>
           <div className={styles.cardBody}>

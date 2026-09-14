@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import type { BriefDraft } from "../brief";
 import type { Direction } from "../direction";
 import { loadMaterialFile } from "../material-files";
-import { MAX_IMAGES, MAX_IMAGE_CHARS, type DirectionsEvent, type DirectionsRequest, type LiveStatus, type RefineRequest, type RefineResponse } from "./protocol";
+import { MAX_DOCUMENTS, MAX_DOCUMENT_CHARS, MAX_IMAGES, MAX_IMAGE_CHARS, MAX_TOTAL_CHARS, type DirectionsEvent, type DirectionsRequest, type LiveStatus, type RefineRequest, type RefineResponse } from "./protocol";
 
 /*
  * The browser's side of live mode: asking whether it's on, preparing shared
@@ -92,14 +92,29 @@ async function shrink(blob: Blob): Promise<{ mediaType: "image/png" | "image/jpe
   }
 }
 
-/** The images the visitor chose to share, ready to send. Ones that can't be read are left out. */
-export async function sharedImages(brief: BriefDraft): Promise<DirectionsRequest["images"]> {
-  const chosen = brief.materials.filter((m) => m.shareWithClaude).slice(0, MAX_IMAGES);
+/**
+ * The images and PDFs the visitor chose to share, ready to send. Images are
+ * scaled down; PDFs go as they are. Files that can't be read are left out, and
+ * if they're too big together an Error explains which to untick.
+ */
+export async function sharedFiles(brief: BriefDraft): Promise<DirectionsRequest["images"]> {
+  const images = brief.materials.filter((m) => m.shareWithClaude && m.kind !== "document").slice(0, MAX_IMAGES);
+  const documents = brief.materials.filter((m) => m.shareWithClaude && m.kind === "document").slice(0, MAX_DOCUMENTS);
   const out: DirectionsRequest["images"] = [];
-  for (const material of chosen) {
+  for (const material of images) {
     const blob = await loadMaterialFile(material.id);
     const image = blob ? await shrink(blob) : null;
     if (image) out.push({ materialId: material.id, ...image });
+  }
+  for (const material of documents) {
+    const blob = await loadMaterialFile(material.id);
+    if (!blob) continue;
+    const data = await blobToBase64(blob);
+    if (data.length > MAX_DOCUMENT_CHARS) throw new Error(`${material.fileName} is too big to send. Untick "Let Claude read this" on it, or add a smaller copy.`);
+    out.push({ materialId: material.id, mediaType: "application/pdf", data });
+  }
+  if (out.reduce((n, f) => n + f.data.length, 0) > MAX_TOTAL_CHARS) {
+    throw new Error("The files you've shared are too big to send together. Untick one or two on the brief and try again.");
   }
   return out;
 }

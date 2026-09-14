@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { BriefDraft } from "@/lib/brief";
 import type { Direction } from "@/lib/direction";
-import { sharedImages, streamDirections } from "@/lib/live/client";
+import { sharedFiles, streamDirections } from "@/lib/live/client";
 import type { DirectionsEvent } from "@/lib/live/protocol";
 import styles from "./GeneratingDirections.module.css";
 import own from "./LiveDirections.module.css";
@@ -19,7 +19,7 @@ type Props = {
 
 type Run =
   | { state: "idle" }
-  | { state: "running"; started: number; stage: "preparing" | "planning" | "writing"; names: string[]; written: boolean[]; retrying: boolean[] }
+  | { state: "running"; started: number; stage: "preparing" | "planning" | "writing"; names: string[]; written: boolean[]; retrying: boolean[]; notice: string | null }
   | { state: "error"; message: string };
 
 /*
@@ -31,7 +31,13 @@ export function LiveDirections({ brief, startLabel, intro, secondary, onDone }: 
   const [run, setRun] = useState<Run>({ state: "idle" });
   const [now, setNow] = useState(() => Date.now());
   const controller = useRef<AbortController | null>(null);
-  const shared = brief.materials.filter((m) => m.shareWithClaude).length;
+  const imageCount = brief.materials.filter((m) => m.shareWithClaude && m.kind !== "document").length;
+  const docCount = brief.materials.filter((m) => m.shareWithClaude && m.kind === "document").length;
+  const extras = [
+    imageCount ? (imageCount === 1 ? "the image you chose to share" : `the ${imageCount} images you chose to share`) : "",
+    docCount ? (docCount === 1 ? "the PDF you chose to share" : `the ${docCount} PDFs you chose to share`) : "",
+    brief.currentSite.trim() ? "the text of your current website" : "",
+  ].filter(Boolean);
 
   // Stop the request if the visitor leaves the page part way through.
   useEffect(() => () => controller.current?.abort(), []);
@@ -49,20 +55,21 @@ export function LiveDirections({ brief, startLabel, intro, secondary, onDone }: 
     controller.current = abort;
     const started = Date.now();
     setNow(started);
-    setRun({ state: "running", started, stage: "preparing", names: [], written: [false, false, false], retrying: [false, false, false] });
+    setRun({ state: "running", started, stage: "preparing", names: [], written: [false, false, false], retrying: [false, false, false], notice: null });
 
     const update = (event: DirectionsEvent) =>
       setRun((r) => {
         if (r.state !== "running") return r;
         if (event.type === "stage") return { ...r, stage: event.stage };
         if (event.type === "planned") return { ...r, names: event.names };
+        if (event.type === "notice") return { ...r, notice: event.message };
         if (event.type === "retry") return { ...r, retrying: r.retrying.map((v, i) => (i === event.index ? true : v)) };
         if (event.type === "direction") return { ...r, written: r.written.map((v, i) => (i === event.index ? true : v)) };
         return r;
       });
 
     try {
-      const images = await sharedImages(brief);
+      const images = await sharedFiles(brief);
       let model = "";
       const directions = await streamDirections({ brief, images }, (event) => {
         if (event.type === "done") model = event.model;
@@ -118,6 +125,11 @@ export function LiveDirections({ brief, startLabel, intro, secondary, onDone }: 
             </li>
           ))}
         </ol>
+        {run.notice ? (
+          <p className="ui-notice" role="status">
+            {run.notice}
+          </p>
+        ) : null}
         <p className={styles.note} aria-live="off">
           {seconds}s. This usually takes about a minute. You can keep this tab open and wait.
         </p>
@@ -138,7 +150,8 @@ export function LiveDirections({ brief, startLabel, intro, secondary, onDone }: 
       <div className={own.intro}>{intro}</div>
       <ul className={own.facts}>
         <li>
-          Your brief{shared ? ` and the ${shared === 1 ? "image" : `${shared} images`} you chose to share` : ""} will be sent to Anthropic, the company that runs Claude. Loose Brief doesn&rsquo;t keep a copy on its server.
+          {listOf(["Your brief", ...extras])} will be sent to Anthropic, the company that runs Claude. Loose Brief doesn&rsquo;t keep a copy on its server.
+          {brief.currentSite.trim() ? " Your website's front page is read by Loose Brief's server first." : ""}
         </li>
         <li>It takes about a minute. Each visitor can run it a few times an hour.</li>
         <li>What comes back is checked before you see it, and labelled as made by Claude.</li>
@@ -151,4 +164,9 @@ export function LiveDirections({ brief, startLabel, intro, secondary, onDone }: 
       </div>
     </div>
   );
+}
+
+/** "A", "A and B", "A, B and C". */
+function listOf(items: string[]): string {
+  return items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 }

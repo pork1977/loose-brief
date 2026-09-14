@@ -104,6 +104,16 @@ export function BriefSummary({ brief }: { brief: BriefDraft }) {
           <dt>Pages</dt>
           <dd>{brief.pages.join(", ")}</dd>
         </div>
+        {brief.brandColours.length || brief.currentSite.trim() || brief.existingCopy.trim() ? (
+          <div>
+            <dt>What you already have</dt>
+            <dd>
+              {brief.brandColours.some((c) => /^#[0-9A-F]{6}$/.test(c)) ? <ColourRow label="Your colours" hexes={brief.brandColours.filter((c) => /^#[0-9A-F]{6}$/.test(c))} /> : null}
+              {brief.currentSite.trim() ? <span className={styles.sub}>Current site: {brief.currentSite.trim().replace(/^https?:\/\//, "")}</span> : null}
+              {brief.existingCopy.trim() ? <span className={styles.sub}>{brief.existingCopy.trim().split(/\s+/).length} words of your own copy</span> : null}
+            </dd>
+          </div>
+        ) : null}
         {brief.materials.length ? (
           <div>
             <dt>Your materials</dt>
@@ -145,7 +155,11 @@ function SummaryThumb({ material }: { material: Material }) {
   const url = useThumbnail(material.id);
   return (
     <li className={styles.thumb} title={material.fileName}>
-      {typeof url === "string" && url !== "loading" ? (
+      {material.kind === "document" ? (
+        <span className={styles.docThumb} aria-hidden="true">
+          PDF
+        </span>
+      ) : typeof url === "string" && url !== "loading" ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt="" />
       ) : (

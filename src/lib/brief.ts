@@ -26,9 +26,12 @@ export const LIMITS = {
   pages: 8,
   materials: 8,
   alt: 160,
+  brandColours: 6,
+  currentSite: 200,
+  existingCopy: 2000,
 } as const;
 
-export const MATERIAL_KINDS = ["logo", "photo", "texture", "screenshot", "other"] as const;
+export const MATERIAL_KINDS = ["logo", "photo", "texture", "screenshot", "other", "document"] as const;
 export type MaterialKind = (typeof MATERIAL_KINDS)[number];
 
 const swatchSchema = z.object({
@@ -79,6 +82,13 @@ export const briefDraftSchema = z.object({
   primaryAction: z.string().max(LIMITS.tag * 2),
   pages: z.array(z.string().max(LIMITS.tag * 2)).max(LIMITS.pages * 2),
   materials: z.array(materialSchema).max(LIMITS.materials),
+  // Added after the first version of the brief, so older saves fill them in as empty.
+  /** Colours the brand already uses and wants to keep, as hex. */
+  brandColours: z.array(z.string().max(20)).max(LIMITS.brandColours * 2).default([]),
+  /** The address of the business's current website, if it has one. */
+  currentSite: z.string().max(LIMITS.currentSite * 2).default(""),
+  /** Words from their existing site or brochures, to show their tone. */
+  existingCopy: z.string().max(LIMITS.existingCopy * 2).default(""),
 });
 export type BriefDraft = z.infer<typeof briefDraftSchema>;
 export type BriefField = keyof BriefDraft;
@@ -96,6 +106,9 @@ export const EMPTY_BRIEF: BriefDraft = {
   primaryAction: "",
   pages: ["Home"],
   materials: [],
+  brandColours: [],
+  currentSite: "",
+  existingCopy: "",
 };
 
 const trimmed = (min: number, max: number, tooShort: string, tooLong: string) =>
@@ -166,7 +179,7 @@ export const BRIEF_STEPS = [
     number: "04",
     label: "Visual direction",
     title: "What should it look like?",
-    fields: ["theme", "avoid", "references", "materials"],
+    fields: ["theme", "avoid", "references", "brandColours", "currentSite", "existingCopy", "materials"],
     schema: z.object({
       theme: z.enum(THEMES, "Choose light, dark or both."),
       avoid: z.array(z.string().trim().min(1).max(LIMITS.tag)).max(LIMITS.avoid, `Add ${LIMITS.avoid} things at most.`),
@@ -174,6 +187,15 @@ export const BRIEF_STEPS = [
         .array(z.string().trim().min(1).max(LIMITS.reference, "Keep each reference to 200 characters or fewer."))
         .max(LIMITS.references, `Add ${LIMITS.references} references at most.`)
         .refine((refs) => refs.every((r) => !looksLikeUrl(r) || isValidUrl(r)), "One of the web addresses isn't valid."),
+      brandColours: z
+        .array(z.string().regex(/^#[0-9A-F]{6}$/i, "Colours need to be six-digit hex values, like #0A3D62."))
+        .max(LIMITS.brandColours, `Add ${LIMITS.brandColours} colours at most.`),
+      currentSite: z
+        .string()
+        .trim()
+        .max(LIMITS.currentSite, `Keep the address to ${LIMITS.currentSite} characters or fewer.`)
+        .refine((url) => url === "" || isValidUrl(url), "That web address isn't valid. It should start with https://"),
+      existingCopy: z.string().max(LIMITS.existingCopy, `Keep this to ${LIMITS.existingCopy} characters or fewer.`),
       materials: z.array(materialSchema).max(LIMITS.materials, `Add ${LIMITS.materials} files at most.`),
     }),
   },
@@ -231,7 +253,12 @@ export function summaryLine(brief: BriefDraft): string {
  * tell when the brief has changed underneath them.
  */
 export function briefKey(brief: BriefDraft): string {
-  const json = JSON.stringify(brief, (_, v) => (typeof v === "string" ? v.trim() : v));
+  // Fields added later are left out while empty, so directions made before they existed don't read as out of date.
+  const later = new Set(["brandColours", "currentSite", "existingCopy"]);
+  const json = JSON.stringify(brief, (key, v) => {
+    if (later.has(key) && (v === "" || (Array.isArray(v) && v.length === 0))) return undefined;
+    return typeof v === "string" ? v.trim() : v;
+  });
   let hash = 0x811c9dc5;
   for (let i = 0; i < json.length; i++) {
     hash ^= json.charCodeAt(i);
@@ -252,7 +279,7 @@ export function answeredCount(brief: BriefDraft): { answered: number; total: num
     brief.theme,
     brief.avoid.length,
     brief.references.length,
-    brief.materials.length,
+    brief.materials.length || brief.brandColours.length || brief.currentSite.trim() || brief.existingCopy.trim(),
     brief.primaryAction.trim(),
     // Pages aren't counted: Home is pre-selected, so it would always read as answered.
   ];

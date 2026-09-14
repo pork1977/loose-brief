@@ -70,6 +70,22 @@ test("a shape illustration draws the chosen shapes, and only the demo's coastlin
   assert.equal(directionSchema.parse(older).illustration, null, "saves from before illustrations still load");
 });
 
+test("images marked 'show it on the site' go in the zip, the nav logo and the hero", () => {
+  const png = new Uint8Array([137, 80, 78, 71]);
+  const siteMedia = { media: { logo: { src: "images/logo.png", alt: "" }, hero: { src: "images/hero.jpg", alt: "Loaves cooling on a rack" } }, files: { "images/logo.png": png, "images/hero.jpg": png } };
+  const withMedia = { ...input(), siteMedia };
+  const { "index.html": html } = siteFiles(withMedia);
+  assert.match(html, /<img src="images\/logo\.png" alt="" class="ws-logo-image"/);
+  assert.match(html, /<img src="images\/hero\.jpg" alt="Loaves cooling on a rack" class="ws-hero-image"/);
+  assert.doesNotMatch(/<div class="ws-hero-visual">[\s\S]*?<\/div>/.exec(html)?.[0] ?? "", /<svg/, "the photo replaces the illustration");
+  const site = unzipSync(siteZip(withMedia));
+  assert.ok(site["images/logo.png"] && site["images/hero.jpg"]);
+  const all = unzipSync(everythingZip(withMedia));
+  assert.ok(all["website/images/hero.jpg"]);
+  // Without any, nothing changes.
+  assert.doesNotMatch(siteFiles(input())["index.html"], /<img/);
+});
+
 test("the explorer data has a frame for every year, matching the slider", () => {
   const { "index.html": html } = siteFiles(input());
   const json = html.match(/<script type="application\/json" id="coastline-frames">([\s\S]*?)<\/script>/)?.[1];

@@ -20,6 +20,9 @@ export const DEMO_BRIEF: BriefDraft = {
   primaryAction: "Request a demonstration",
   pages: ["Home", "Platform", "About", "Contact"],
   materials: [],
+  brandColours: [],
+  currentSite: "",
+  existingCopy: "",
 };
 
 /** True when a brief is the untouched demo, ignoring surrounding whitespace. */

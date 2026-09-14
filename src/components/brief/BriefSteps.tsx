@@ -172,9 +172,62 @@ export function VisualStep({ brief, errors, set }: StepProps) {
         placeholder="e.g. https://example.com"
         error={errors.references}
       />
+      <fieldset className={styles.existing}>
+        <legend className={styles.existingTitle}>What you already have</legend>
+        <p className="ui-hint">All optional. Claude uses these when it writes your directions, so the brand builds on what exists rather than starting from nothing.</p>
+        <TagField
+          label="Colours you already use"
+          name="brandColours"
+          optional
+          hint="Hex values, like #0A3D62. These are kept exactly."
+          values={brief.brandColours}
+          onChange={(v) => set("brandColours", v.map(normaliseHex))}
+          maxItems={LIMITS.brandColours}
+          maxLength={7}
+          placeholder="#0A3D62"
+          error={errors.brandColours}
+        />
+        {brief.brandColours.some((c) => /^#[0-9A-F]{6}$/.test(c)) ? (
+          <ul className={styles.swatchRow} aria-hidden="true">
+            {brief.brandColours
+              .filter((c) => /^#[0-9A-F]{6}$/.test(c))
+              .map((c) => (
+                <li key={c} style={{ background: c }} />
+              ))}
+          </ul>
+        ) : null}
+        <TextField
+          label="Your current website"
+          name="currentSite"
+          optional
+          hint="Claude reads the words and colours on its front page. Loose Brief fetches it on its server when you generate directions."
+          value={brief.currentSite}
+          onChange={(v) => set("currentSite", v)}
+          max={LIMITS.currentSite}
+          placeholder="https://"
+          autoComplete="url"
+          error={errors.currentSite}
+        />
+        <TextAreaField
+          label="Words you already use"
+          name="existingCopy"
+          optional
+          hint="Paste a paragraph or two from a leaflet, an old site or an email to customers. It shows Claude your tone. It won't be copied word for word."
+          value={brief.existingCopy}
+          onChange={(v) => set("existingCopy", v)}
+          max={LIMITS.existingCopy}
+          error={errors.existingCopy}
+        />
+      </fieldset>
       <MaterialsField materials={brief.materials} />
     </>
   );
+}
+
+/** Tidy a typed colour: add the #, and upper-case it so it matches everywhere else. */
+function normaliseHex(value: string): string {
+  const v = value.trim().replace(/^#?/, "#").toUpperCase();
+  return /^#[0-9A-F]{3}$/.test(v) ? `#${v[1]}${v[1]}${v[2]}${v[2]}${v[3]}${v[3]}` : v;
 }
 
 const ACTION_PRESETS = ["Request a demonstration", "Book a call", "Buy a product", "Sign up", "Get in touch", "Donate"];

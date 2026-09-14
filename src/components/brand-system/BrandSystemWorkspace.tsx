@@ -4,6 +4,9 @@ import { useCallback, useEffect, useId, useRef, useState, ViewTransition, type K
 import { BrandScope } from "@/components/brand/BrandScope";
 import { ScaledPreview } from "@/components/brand/ScaledPreview";
 import { Website } from "@/components/website/Website";
+import { SiteMediaContext } from "@/components/website/WebsiteContext";
+import { EMPTY_BRIEF } from "@/lib/brief";
+import { useSiteMediaUrls } from "@/lib/site-media";
 import { ButtonLink } from "@/components/ui/Button";
 import { dispatch, useProject } from "@/state/project-store";
 import { ColoursTab } from "./ColoursTab";
@@ -60,6 +63,7 @@ function Workspace() {
 
   const highlight = useCallback((tokens: string[] | null) => setHighlighted(tokens), []);
 
+  const media = useSiteMediaUrls(project?.state.brief ?? EMPTY_BRIEF);
   if (!brand || !project) return null;
   const { direction, previewMode, past, future } = brand;
   const brandName = project.state.brief.name.trim();
@@ -206,7 +210,9 @@ function Workspace() {
                 <ViewTransition name={`direction-preview-${brand.sourceId}`} share="auto" default="none">
                   <div>
                     <ScaledPreview designWidth={1200} label={`${brandName} homepage preview in ${previewMode} mode`} onContentElement={(node) => { previewRef.current = node; }}>
-                      <Website brandName={brandName} direction={direction} />
+                      <SiteMediaContext.Provider value={media}>
+                        <Website brandName={brandName} direction={direction} />
+                      </SiteMediaContext.Provider>
                     </ScaledPreview>
                   </div>
                 </ViewTransition>

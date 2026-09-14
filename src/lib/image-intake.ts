@@ -55,9 +55,35 @@ function guessKind(file: File, hasAlpha: boolean): MaterialKind {
   return "photo";
 }
 
+/** PDFs are sent to Claude as they are, so they have to fit in a request: about 2MB. */
+export const MAX_PDF_BYTES = 2 * 1024 * 1024;
+
 export async function readMaterial(file: File): Promise<{ material: Material; thumbnail: Blob }> {
+  if (file.type === "application/pdf") {
+    if (file.size > MAX_PDF_BYTES) throw new IntakeError("That PDF is over 2 MB. Try a smaller copy, or just the pages that matter.");
+    // No colours to read from a PDF here; Claude reads it when it's shared. The file itself is what's stored.
+    return {
+      material: {
+        id: crypto.randomUUID(),
+        fileName: file.name.slice(0, 200),
+        mimeType: file.type,
+        kind: "document",
+        use: "inspiration",
+        keepColours: false,
+        alt: "",
+        width: 0,
+        height: 0,
+        palette: [],
+        exactColours: [],
+        traits: { lightness: "mid", saturation: "balanced", temperature: "neutral" },
+        addedAt: new Date().toISOString(),
+        shareWithClaude: false,
+      },
+      thumbnail: file,
+    };
+  }
   if (!ACCEPTED_TYPES.includes(file.type)) {
-    throw new IntakeError("Use a PNG, JPG, WebP, AVIF, GIF or SVG image.");
+    throw new IntakeError("Use a PNG, JPG, WebP, AVIF, GIF or SVG image, or a PDF.");
   }
   if (file.size > MAX_FILE_BYTES) {
     throw new IntakeError("That file is over 10 MB. Try a smaller copy.");

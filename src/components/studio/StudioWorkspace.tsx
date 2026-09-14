@@ -3,7 +3,9 @@
 import { useCallback, useRef, useState } from "react";
 import { Segmented, useUndoShortcuts } from "@/components/brand-system/controls";
 import { ButtonLink } from "@/components/ui/Button";
-import type { SiteTarget } from "@/components/website/WebsiteContext";
+import { SiteMediaContext, type SiteTarget } from "@/components/website/WebsiteContext";
+import { EMPTY_BRIEF } from "@/lib/brief";
+import { useSiteMediaUrls } from "@/lib/site-media";
 import type { DirectorMessage } from "@/state/project";
 import { dispatch, useProject } from "@/state/project-store";
 import { DirectorPanel, previewDirection } from "./DirectorPanel";
@@ -47,6 +49,7 @@ function Workspace() {
   const syncFromBefore = useCallback((ratio: number) => canvases.current.after?.setScrollRatio(ratio), []);
 
   const brand = project?.state.brand;
+  const media = useSiteMediaUrls(project?.state.brief ?? EMPTY_BRIEF);
   if (!project || !brand) return null;
 
   const { direction, previewMode, past, future } = brand;
@@ -157,6 +160,7 @@ function Workspace() {
           <SectionRail direction={direction} onJump={jump} />
         </details>
 
+        <SiteMediaContext.Provider value={media}>
         <div className={styles.stage} data-compare={comparing}>
           {previewing && proposed ? (
             <p className={styles.previewBanner} role="status">
@@ -194,6 +198,7 @@ function Workspace() {
             </div>
           </div>
         </div>
+        </SiteMediaContext.Provider>
 
         <div id="creative-director" className={styles.directorWrap}>
           <DirectorPanel

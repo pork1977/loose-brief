@@ -7,7 +7,7 @@ import type { Direction } from "@/lib/direction";
 import { navTarget, type Section, type SectionOf } from "@/lib/website";
 import { CoastlineExplorer } from "./CoastlineExplorer";
 import { Reveal } from "./Reveal";
-import { useWebsiteFrame, type SiteTarget } from "./WebsiteContext";
+import { useSiteMedia, useWebsiteFrame, type SiteTarget } from "./WebsiteContext";
 import { SiteStyles, siteClasses } from "./site-classes";
 
 const styles = siteClasses("ws");
@@ -126,6 +126,7 @@ function Heading({ id, eyebrow, title }: { id: string; eyebrow: string; title: s
 function Nav({ brandName, direction }: { brandName: string; direction: Direction }) {
   const [open, setOpen] = useState(false);
   const { interactive } = useWebsiteFrame();
+  const media = useSiteMedia();
   const menuId = useId();
   const { sample, website } = direction;
 
@@ -139,7 +140,13 @@ function Nav({ brandName, direction }: { brandName: string; direction: Direction
     <header className={styles.nav} data-open={open} data-tokens="--color-background --color-border --space-s">
       <div className={styles.navInner}>
         <SiteLink to="top" className={styles.logo} tokens="--font-display --color-text-primary">
-          <span className={styles.logoMark} aria-hidden="true" data-tokens="--color-button-primary --radius-small" />
+          {media.logo ? (
+            // The visitor's own file (an object URL, or a path in the export), so next/image doesn't apply.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={media.logo.src} alt="" className={styles.logoImage} />
+          ) : (
+            <span className={styles.logoMark} aria-hidden="true" data-tokens="--color-button-primary --radius-small" />
+          )}
           {brandName}
         </SiteLink>
         <nav className={styles.navLinks} aria-label="Main">
@@ -176,6 +183,7 @@ function Nav({ brandName, direction }: { brandName: string; direction: Direction
 
 function Hero({ direction }: { direction: Direction }) {
   const { sample, website } = direction;
+  const media = useSiteMedia();
   const id = useId();
   return (
     <section className={styles.hero} data-section="hero" aria-labelledby={id} data-tokens="--space-2xl --space-l">
@@ -199,8 +207,15 @@ function Hero({ direction }: { direction: Direction }) {
         </div>
       </div>
       <div className={styles.heroVisual} data-tokens="--color-surface --color-border --radius-card --shadow-card --color-brand-primary --color-brand-secondary --color-brand-accent">
-        <BrandIllustration direction={direction} />
-        {isDemoDirection(direction.id) && !direction.illustration ? <span className={styles.caption}>Illustrative</span> : null}
+        {media.hero ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={media.hero.src} alt={media.hero.alt} className={styles.heroImage} />
+        ) : (
+          <>
+            <BrandIllustration direction={direction} />
+            {isDemoDirection(direction.id) && !direction.illustration ? <span className={styles.caption}>Illustrative</span> : null}
+          </>
+        )}
       </div>
     </section>
   );

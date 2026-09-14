@@ -19,13 +19,14 @@ import {
   planSchema,
   type BrandPart,
 } from "./draft";
-import { BRAND_PART_INSTRUCTION, DIRECTIONS_SYSTEM, PLAN_INSTRUCTION, REFINE_SYSTEM, briefBlock, copyPartInstruction, directionInstruction, type ImageNote } from "./prompts";
+import { BRAND_PART_INSTRUCTION, DIRECTIONS_SYSTEM, PLAN_INSTRUCTION, REFINE_SYSTEM, briefBlock, copyPartInstruction, directionInstruction, type ImageNote, type SiteSummary } from "./prompts";
+
+import type { DirectionsEvent, RefineRequest, RefineResponse } from "./protocol";
 
 /** Keep only the expected keys, so a reply can't smuggle fields in from the other half. */
 function pick<T extends object, K extends keyof T>(value: T, keys: readonly K[]): Pick<T, K> {
   return Object.fromEntries(keys.map((k) => [k, value[k]])) as Pick<T, K>;
 }
-import type { DirectionsEvent, RefineRequest, RefineResponse } from "./protocol";
 
 /*
  * The steps of a live run, written against a `ModelCall` function rather than
@@ -33,7 +34,7 @@ import type { DirectionsEvent, RefineRequest, RefineResponse } from "./protocol"
  * pass in a fake one, so this logic is checked without spending anything.
  */
 
-export type Block = { type: "text"; text: string; cache?: boolean } | { type: "image"; mediaType: string; data: string };
+export type Block = { type: "text"; text: string; cache?: boolean } | { type: "image"; mediaType: string; data: string } | { type: "document"; data: string };
 
 export type ModelCall = <T>(request: { step: "plan" | "brand" | "copy" | "refine"; system: string; blocks: Block[]; schema: z.ZodType<T>; maxTokens: number }) => Promise<T>;
 
@@ -42,16 +43,19 @@ export class LiveError extends Error {}
 
 type DirectionsInput = {
   brief: BriefDraft;
+  /** Images and PDFs the visitor chose to share. */
   images: { mediaType: string; data: string; note: ImageNote }[];
+  /** What was read from their current website, when they gave one and it could be fetched. */
+  site?: SiteSummary | null;
   call: ModelCall;
   emit: (event: DirectionsEvent) => void;
 };
 
-export async function runDirections({ brief, images, call, emit }: DirectionsInput): Promise<Direction[]> {
-  // Images first, then the brief: the same opening blocks on every call, so they're cached after the first.
+export async function runDirections({ brief, images, site = null, call, emit }: DirectionsInput): Promise<Direction[]> {
+  // Files first, then the brief: the same opening blocks on every call, so they're cached after the first.
   const shared: Block[] = [
-    ...images.map((img) => ({ type: "image" as const, mediaType: img.mediaType, data: img.data })),
-    { type: "text", text: briefBlock(brief, images.map((i) => i.note)), cache: true },
+    ...images.map((f): Block => (f.mediaType === "application/pdf" ? { type: "document", data: f.data } : { type: "image", mediaType: f.mediaType, data: f.data })),
+    { type: "text", text: briefBlock(brief, images.map((i) => i.note), site), cache: true },
   ];
 
   emit({ type: "stage", stage: "planning" });

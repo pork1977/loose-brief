@@ -164,6 +164,14 @@ export const SITE_CSS = String.raw`
   border-radius: var(--radius-small);
   background: linear-gradient(135deg, var(--color-button-primary) 55%, var(--color-brand-accent) 55%);
 }
+/* The visitor's own logo, when they chose to show it on the site. */
+.ws-logo-image {
+  display: block;
+  width: auto;
+  max-width: 7rem;
+  height: 1.75rem;
+  object-fit: contain;
+}
 .ws-nav-links {
   display: none;
   gap: var(--space-m);
@@ -302,6 +310,12 @@ export const SITE_CSS = String.raw`
   box-shadow: var(--shadow-card);
   overflow: hidden;
   animation: ws-rise var(--motion-slow) var(--motion-easing) 120ms both;
+}
+.ws-hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .ws-caption {
   position: absolute;

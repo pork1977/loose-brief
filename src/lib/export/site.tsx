@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { SITE_CSS } from "@/components/website/site-css";
 import { Website } from "@/components/website/Website";
-import { WebsiteFrameContext, type WebsiteFrame } from "@/components/website/WebsiteContext";
+import { SiteMediaContext, WebsiteFrameContext, type SiteMedia, type WebsiteFrame } from "@/components/website/WebsiteContext";
 import { COAST, coastlineFrame } from "../coastline";
 import type { Direction } from "../direction";
 import { toCss } from "../exporters";
@@ -104,12 +104,14 @@ export const slugify = (name: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "") || "brand";
 
-type SiteOptions = { brandName: string; direction: Direction; followSystem: boolean };
+type SiteOptions = { brandName: string; direction: Direction; followSystem: boolean; media?: SiteMedia };
 
-export function buildStaticSite({ brandName, direction, followSystem }: SiteOptions): ExportFiles {
+export function buildStaticSite({ brandName, direction, followSystem, media = {} }: SiteOptions): ExportFiles {
   const markup = renderToStaticMarkup(
     <WebsiteFrameContext.Provider value={EXPORT_FRAME}>
-      <Website brandName={brandName} direction={direction} />
+      <SiteMediaContext.Provider value={media}>
+        <Website brandName={brandName} direction={direction} />
+      </SiteMediaContext.Provider>
     </WebsiteFrameContext.Provider>,
   )
     // The illustration puts the stylesheet inline for the Studio; the download links styles.css instead.
@@ -164,11 +166,11 @@ ${frames ? `    <script type="application/json" id="coastline-frames">${frames}<
     "index.html": html,
     "styles.css": css,
     "site.js": SITE_SCRIPT,
-    "README.txt": siteReadme(brandName, followSystem, showsExplorer),
+    "README.txt": siteReadme(brandName, followSystem, showsExplorer, Object.keys(media).length > 0),
   };
 }
 
-function siteReadme(brandName: string, followSystem: boolean, showsExplorer: boolean): string {
+function siteReadme(brandName: string, followSystem: boolean, showsExplorer: boolean, hasImages: boolean): string {
   return `${brandName} homepage
 ${"=".repeat(brandName.length + 9)}
 
@@ -182,7 +184,7 @@ styles.css   Your brand tokens at the top, then the page styles. The page styles
              changes it everywhere.
 site.js      The mobile menu, the form, sections fading in${showsExplorer ? " and the coastline explorer" : ""}.
              Plain JavaScript, no libraries.
-
+${hasImages ? "images/      The logo and photo you chose to show on the site.\n" : ""}
 Looking at it
 -------------
 Open index.html in any browser. Fonts load from Google Fonts, so you need an

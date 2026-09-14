@@ -4,7 +4,7 @@ import { useId, useRef, useState } from "react";
 import { LIMITS, MATERIAL_KINDS, type Material, type MaterialKind } from "@/lib/brief";
 import { ACCEPTED_TYPES, IntakeError, readMaterial } from "@/lib/image-intake";
 import { useLiveStatus } from "@/lib/live/client";
-import { MAX_IMAGES } from "@/lib/live/protocol";
+import { MAX_DOCUMENTS, MAX_IMAGES } from "@/lib/live/protocol";
 import { saveMaterialFile } from "@/lib/material-files";
 import { forgetThumbnail, rememberThumbnail, useThumbnail } from "@/lib/material-thumbnails";
 import { dispatch } from "@/state/project-store";
@@ -22,6 +22,7 @@ const KIND_LABELS: Record<MaterialKind, string> = {
   texture: "Pattern or texture",
   screenshot: "Screenshot of something I like",
   other: "Something else",
+  document: "Document (PDF)",
 };
 
 type Pending = { key: string; name: string; status: "reading" } | { key: string; name: string; status: "error"; message: string };
@@ -34,7 +35,8 @@ export function MaterialsField({ materials }: { materials: Material[] }) {
   const [dragging, setDragging] = useState(false);
 
   const live = useLiveStatus();
-  const shared = materials.filter((m) => m.shareWithClaude).length;
+  const sharedDocs = materials.filter((m) => m.shareWithClaude && m.kind === "document").length;
+  const sharedImages = materials.filter((m) => m.shareWithClaude && m.kind !== "document").length;
   const reading = pending.filter((p) => p.status === "reading").length;
   const room = LIMITS.materials - materials.length - reading;
 
@@ -72,8 +74,8 @@ export function MaterialsField({ materials }: { materials: Material[] }) {
         </span>
       </span>
       <p id={hintId} className="ui-hint">
-        A logo, photos, textures, or screenshots of things you like. Their colours are read straight away and shape
-        the directions. Files stay in this browser
+        A logo, photos, textures, screenshots of things you like, or a PDF such as existing brand guidelines. Colours are read from
+        images straight away and shape the directions. Files stay in this browser
         {live ? ", unless you tick “Let Claude look at this” on one, in which case it's sent with your brief when directions are generated." : ". Nothing is uploaded."}
       </p>
 
@@ -96,18 +98,18 @@ export function MaterialsField({ materials }: { materials: Material[] }) {
           <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <p>
-          <strong>Drop images here</strong> or{" "}
+          <strong>Drop images or PDFs here</strong> or{" "}
           <label htmlFor={inputId} className={styles.browse}>
             choose files
           </label>
         </p>
-        <p className="ui-hint">PNG, JPG, WebP, AVIF, GIF or SVG, up to 10 MB each.</p>
+        <p className="ui-hint">PNG, JPG, WebP, AVIF, GIF or SVG up to 10 MB, or PDF up to 2 MB.</p>
         <input
           ref={inputRef}
           id={inputId}
           type="file"
           multiple
-          accept={ACCEPTED_TYPES.join(",")}
+          accept={[...ACCEPTED_TYPES, "application/pdf"].join(",")}
           className="visually-hidden"
           aria-describedby={hintId}
           disabled={room <= 0}
@@ -125,7 +127,7 @@ export function MaterialsField({ materials }: { materials: Material[] }) {
             <li key={item.key} className={item.status === "error" ? "ui-notice ui-notice--error" : "ui-notice"}>
               <span>
                 <strong>{item.name}</strong>
-                {item.status === "reading" ? " Reading colours..." : ` ${item.message}`}
+                {item.status === "reading" ? " Reading..." : ` ${item.message}`}
               </span>
               {item.status === "error" ? (
                 <button
@@ -144,7 +146,12 @@ export function MaterialsField({ materials }: { materials: Material[] }) {
       {materials.length ? (
         <ul className={styles.list}>
           {materials.map((material) => (
-            <MaterialCard key={material.id} material={material} live={live === true} sharingFull={shared >= MAX_IMAGES} />
+            <MaterialCard
+              key={material.id}
+              material={material}
+              live={live === true}
+              sharingFull={material.kind === "document" ? sharedDocs >= MAX_DOCUMENTS : sharedImages >= MAX_IMAGES}
+            />
           ))}
         </ul>
       ) : null}
@@ -152,7 +159,75 @@ export function MaterialsField({ materials }: { materials: Material[] }) {
   );
 }
 
+/** A PDF: nothing to preview or read colours from, so just what it is and whether Claude may read it. */
+function DocumentCard({ material, live, sharingFull }: { material: Material; live: boolean; sharingFull: boolean }) {
+  const id = useId();
+  const update = (patch: Partial<Omit<Material, "id">>) => dispatch({ type: "material/update", id: material.id, patch });
+  return (
+    <li className={styles.card}>
+      <div className={styles.thumb} data-kind="document">
+        <svg viewBox="0 0 48 48" className={styles.docIcon} aria-hidden="true">
+          <path d="M12 5h17l9 9v29H12z M29 5v9h9 M18 24h14 M18 30h14 M18 36h9" />
+        </svg>
+      </div>
+      <div className={styles.details}>
+        <div className={styles.cardHeader}>
+          <p className={styles.fileName} title={material.fileName}>
+            {material.fileName}
+          </p>
+          <button
+            type="button"
+            className="ui-button ui-button--ghost ui-button--small"
+            onClick={async () => {
+              dispatch({ type: "material/remove", id: material.id });
+              await forgetThumbnail(material.id);
+            }}
+            aria-label={`Remove ${material.fileName}`}
+          >
+            Remove
+          </button>
+        </div>
+        <div className="ui-field">
+          <label className="ui-label" htmlFor={`${id}-about`}>
+            <span>
+              What is it? <span className="ui-label__optional">(optional)</span>
+            </span>
+          </label>
+          <input
+            id={`${id}-about`}
+            className="ui-input ui-input--small"
+            value={material.alt}
+            maxLength={LIMITS.alt}
+            placeholder="e.g. Our current brand guidelines"
+            onChange={(e) => update({ alt: e.target.value })}
+          />
+        </div>
+        {live ? (
+          <div>
+            <label className={styles.checkbox}>
+              <input type="checkbox" checked={material.shareWithClaude} disabled={!material.shareWithClaude && sharingFull} onChange={(e) => update({ shareWithClaude: e.target.checked })} />
+              Let Claude read this
+            </label>
+            <p className="ui-hint">
+              {!material.shareWithClaude && sharingFull
+                ? `You can share ${MAX_DOCUMENTS} documents at most.`
+                : "Sent to Anthropic with your brief when you generate directions. Claude follows any brand rules, colours and tone it sets out."}
+            </p>
+          </div>
+        ) : (
+          <p className="ui-hint">PDFs are only read when live generation is switched on.</p>
+        )}
+      </div>
+    </li>
+  );
+}
+
 function MaterialCard({ material, live, sharingFull }: { material: Material; live: boolean; sharingFull: boolean }) {
+  if (material.kind === "document") return <DocumentCard material={material} live={live} sharingFull={sharingFull} />;
+  return <ImageCard material={material} live={live} sharingFull={sharingFull} />;
+}
+
+function ImageCard({ material, live, sharingFull }: { material: Material; live: boolean; sharingFull: boolean }) {
   const id = useId();
   const thumbnail = useThumbnail(material.id);
   const update = (patch: Partial<Omit<Material, "id">>) => dispatch({ type: "material/update", id: material.id, patch });
@@ -221,7 +296,7 @@ function MaterialCard({ material, live, sharingFull }: { material: Material; liv
                 update({ kind, keepColours: kind === "logo" ? material.keepColours : false });
               }}
             >
-              {MATERIAL_KINDS.map((kind) => (
+              {MATERIAL_KINDS.filter((kind) => kind !== "document").map((kind) => (
                 <option key={kind} value={kind}>
                   {KIND_LABELS[kind]}
                 </option>

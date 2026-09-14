@@ -29,11 +29,11 @@ export type Usage = { calls: number; input: number; output: number; cacheWrite: 
 export const emptyUsage = (): Usage => ({ calls: 0, input: 0, output: 0, cacheWrite: 0, cacheRead: 0 });
 
 function toContent(blocks: Block[]): Anthropic.ContentBlockParam[] {
-  return blocks.map((b) =>
-    b.type === "image"
-      ? { type: "image", source: { type: "base64", media_type: b.mediaType as "image/png", data: b.data } }
-      : { type: "text", text: b.text, ...(b.cache ? { cache_control: { type: "ephemeral" as const } } : {}) },
-  );
+  return blocks.map((b): Anthropic.ContentBlockParam => {
+    if (b.type === "image") return { type: "image", source: { type: "base64", media_type: b.mediaType as "image/png", data: b.data } };
+    if (b.type === "document") return { type: "document", source: { type: "base64", media_type: "application/pdf", data: b.data } };
+    return { type: "text", text: b.text, ...(b.cache ? { cache_control: { type: "ephemeral" as const } } : {}) };
+  });
 }
 
 /** A ModelCall backed by the real API. Adds each call's token counts to `usage` and logs them. */

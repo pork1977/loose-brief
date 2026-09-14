@@ -30,3 +30,16 @@ export const WebsiteFrameContext = createContext<WebsiteFrame>({
 });
 
 export const useWebsiteFrame = () => useContext(WebsiteFrameContext);
+
+/*
+ * Images the visitor added to their brief and marked "Show it on the site":
+ * the first logo goes in the navigation, the first other image replaces the
+ * hero illustration. In the editor these are object URLs for files held in
+ * this browser; in the export they're paths to files in the zip.
+ */
+export type SiteImage = { src: string; alt: string };
+export type SiteMedia = { logo?: SiteImage; hero?: SiteImage };
+
+export const SiteMediaContext = createContext<SiteMedia>({});
+
+export const useSiteMedia = () => useContext(SiteMediaContext);
