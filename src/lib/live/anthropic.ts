@@ -10,7 +10,7 @@ import { LiveError, type Block, type ModelCall } from "./generate";
  *
  * The key comes from ANTHROPIC_API_KEY and should be a key used for nothing
  * else, with a monthly spend limit set in the Anthropic console: that limit is
- * the one hard ceiling on cost. The model defaults to Claude Opus 5 and can be
+ * the one hard ceiling on cost. The model defaults to Claude Sonnet 5 and can be
  * changed with LIVE_MODEL without touching code.
  */
 
@@ -21,7 +21,7 @@ import { LiveError, type Block, type ModelCall } from "./generate";
  */
 const FAKE = process.env.LIVE_FAKE === "1" && process.env.NODE_ENV !== "production";
 
-export const LIVE_MODEL = FAKE ? "fake (development only)" : process.env.LIVE_MODEL || "claude-opus-5";
+export const LIVE_MODEL = FAKE ? "fake (development only)" : process.env.LIVE_MODEL || "claude-sonnet-5";
 
 export const isLiveConfigured = () => FAKE || Boolean(process.env.ANTHROPIC_API_KEY);
 

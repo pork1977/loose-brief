@@ -176,8 +176,17 @@ export function fit(text: string, max: number): string {
   if (clean.length <= max) return clean;
   const cut = clean.slice(0, max + 1);
   const space = cut.lastIndexOf(" ");
-  return (space >= max * 0.5 ? cut.slice(0, space) : clean.slice(0, max)).replace(/[\s,;:.-]+$/, "");
+  let out = (space >= max * 0.5 ? cut.slice(0, space) : clean.slice(0, max)).replace(/[\s,;:.-]+$/, "");
+  // Don't leave a phrase hanging on a little word ("...their usual bake every").
+  for (let i = 0; i < 3; i++) {
+    const trimmed = out.replace(DANGLING, "").replace(/[\s,;:.-]+$/, "");
+    if (trimmed === out || trimmed.length < max * 0.4) break;
+    out = trimmed;
+  }
+  return out;
 }
+
+const DANGLING = /\s+(a|an|the|and|or|but|of|to|for|with|in|on|at|by|from|every|each|your|our|their|its|is|are|so|that|than|as)$/i;
 
 const HEX = /^#[0-9A-F]{6}$/;
 function hex(value: string, fallback: string): string {

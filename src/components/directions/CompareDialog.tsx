@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { BrandScope } from "@/components/brand/BrandScope";
+import { isDemoDirection } from "@/data/demo-ids";
 import { CoastlineVisual } from "@/components/brand/CoastlineVisual";
 import { MiniSite } from "@/components/brand/MiniSite";
 import { MotionPreview } from "@/components/brand/MotionPreview";
@@ -111,7 +112,7 @@ export function CompareDialog({ open, brandName, directions, selectedId, onSelec
             {row("Imagery", (d) => (
               <div className={styles.imagery}>
                 <span className={styles.thumb}>
-                  <CoastlineVisual style={d.visual} />
+                  <CoastlineVisual style={d.visual} abstract={!isDemoDirection(d.id)} />
                 </span>
                 <p className={styles.text}>{d.imagery.style}</p>
               </div>

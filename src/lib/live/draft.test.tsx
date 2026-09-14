@@ -75,6 +75,7 @@ test("fit trims at a word boundary and never leaves trailing punctuation", () =>
   assert.equal(fit("Short", 10), "Short");
   assert.equal(fit("One two three four five", 12), "One two");
   assert.equal(fit("Calm — and clear", 40), "Calm, and clear");
+  assert.equal(fit("Example: regulars who get their usual bake every week", 50), "Example: regulars who get their usual bake");
 });
 
 test("the three routes always get different illustration styles", () => {

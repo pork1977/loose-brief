@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import { BrandScope } from "@/components/brand/BrandScope";
+import { isDemoDirection } from "@/data/demo-ids";
 import { CoastlineVisual } from "@/components/brand/CoastlineVisual";
 import { TagField } from "@/components/form/fields";
 import { VISUAL_STYLES, type Direction, type VisualStyle } from "@/lib/direction";
@@ -83,7 +84,7 @@ export function ImageryTab({ direction, mode }: { direction: Direction; mode: Mo
                 onChange={() => brandEdit(`${STYLE_LABELS[style].label} illustrations`, [{ path: "visual", value: style }])}
               />
               <BrandScope tokens={direction.tokens} mode={mode} className={styles.styleThumb} aria-hidden="true">
-                <CoastlineVisual style={style} />
+                <CoastlineVisual style={style} abstract={!isDemoDirection(direction.id)} />
               </BrandScope>
               <span className={styles.presetName}>{STYLE_LABELS[style].label}</span>
               <span className={styles.presetDescription}>{STYLE_LABELS[style].description}</span>

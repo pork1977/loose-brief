@@ -268,7 +268,7 @@ export default function HowItsBuiltPage() {
                 </li>
                 <li>Zod for the schemas that brands, briefs and saved projects have to pass.</li>
                 <li>fflate to make the zip files in the browser.</li>
-                <li>The Anthropic SDK for Claude, used only on the server, with Claude Opus 5 by default.</li>
+                <li>The Anthropic SDK for Claude, used only on the server, with Claude Sonnet 5 by default.</li>
                 <li>
                   Unit tests with Node&rsquo;s built-in test runner, covering the project history and upgrades, tokens, contrast, the Creative
                   Director&rsquo;s rules, the exports, and the live generation steps run against a stand-in for Claude.

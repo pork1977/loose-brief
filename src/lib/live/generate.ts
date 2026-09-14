@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { BriefDraft } from "../brief";
 import { directionSchema, directionSetSchema, type Direction } from "../direction";
 import { getPath, setPath } from "../tokens";
+import { isDemoDirection } from "../../data/demo-ids";
 import { CHANGE_TYPES, areaFor } from "../refinement";
 import { applyBrandChanges, type BrandChange } from "../../state/project";
 import { SECTION_ORDER } from "../website";
@@ -227,7 +228,9 @@ export async function runRefine({ request, direction, brief }: RefineRequest, ca
   let draft = await call({ step: "refine", system: REFINE_SYSTEM, blocks: blocks(), schema: refineDraftSchema, maxTokens: 6000 });
   if (!draft.possible || !draft.changes.length) return { ok: true, possible: false, text: draft.summary || "I can't do that one by changing this brand." };
 
-  let changes: BrandChange[] = draft.changes.map((c) => normaliseChange(direction, c.path.trim(), c.value));
+  // The coastline explorer section belongs to the Ebbfield demo; a generated brand keeps it switched off.
+  const allowed = (path: string) => isDemoDirection(direction.id) || !path.startsWith(`website.sections.${SECTION_ORDER.indexOf("data")}`);
+  let changes: BrandChange[] = draft.changes.filter((c) => allowed(c.path.trim())).map((c) => normaliseChange(direction, c.path.trim(), c.value));
   let applied = applyBrandChanges(direction, changes);
   if (!applied) {
     const problems = diagnose(direction, changes);
@@ -240,7 +243,7 @@ export async function runRefine({ request, direction, brief }: RefineRequest, ca
       maxTokens: 6000,
     });
     if (!draft.possible || !draft.changes.length) return { ok: true, possible: false, text: draft.summary || "I can't do that one by changing this brand." };
-    changes = draft.changes.map((c) => normaliseChange(direction, c.path.trim(), c.value));
+    changes = draft.changes.filter((c) => allowed(c.path.trim())).map((c) => normaliseChange(direction, c.path.trim(), c.value));
     applied = applyBrandChanges(direction, changes);
   }
   if (!applied) return { ok: false, message: "Claude suggested changes that didn't pass the brand's checks, so nothing was changed. Try wording it differently." };

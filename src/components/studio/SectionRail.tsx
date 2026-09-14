@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { DraftField, brandEdit } from "@/components/brand-system/controls";
 import type { SiteTarget } from "@/components/website/WebsiteContext";
+import { isDemoDirection } from "@/data/demo-ids";
 import type { Direction } from "@/lib/direction";
 import { LOCKED_SECTIONS, SECTION_LABELS, SECTION_ORDER, type Section } from "@/lib/website";
 import styles from "./SectionRail.module.css";
@@ -84,18 +85,19 @@ type Props = { direction: Direction; onJump: (target: SiteTarget) => void };
 
 export function SectionRail({ direction, onJump }: Props) {
   const [open, setOpen] = useState<string | null>(null);
-  const sections = direction.website.sections;
-  const visibleCount = sections.filter((s) => !s.hidden).length;
+  // The coastline explorer only exists for the Ebbfield demo, so a generated brand doesn't list it at all.
+  const listed = direction.website.sections.map((section, index) => ({ section, index })).filter(({ section }) => section.type !== "data" || isDemoDirection(direction.id));
+  const visibleCount = listed.filter(({ section }) => !section.hidden).length;
 
   return (
     <div className={styles.rail}>
       <p className={styles.summary}>
-        {visibleCount + 2} of {sections.length + 2} sections showing. Select one to jump to it; open it to edit its words.
+        {visibleCount + 2} of {listed.length + 2} sections showing. Select one to jump to it; open it to edit its words.
       </p>
       <ol className={styles.list}>
         <Row label={SECTION_LABELS.nav} target="top" fields={NAV_FIELDS} direction={direction} open={open === "nav"} onToggle={() => setOpen(open === "nav" ? null : "nav")} onJump={onJump} locked />
         <Row label={SECTION_LABELS.hero} target="top" fields={HERO_FIELDS} direction={direction} open={open === "hero"} onToggle={() => setOpen(open === "hero" ? null : "hero")} onJump={onJump} locked />
-        {sections.map((section, index) => (
+        {listed.map(({ section, index }) => (
           <Row
             key={section.id}
             label={SECTION_LABELS[section.type]}

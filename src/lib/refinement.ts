@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isDemoDirection } from "../data/demo-ids";
 import type { BriefDraft } from "./brief";
 import { brandFont } from "./brand-fonts";
 import { MOTION_PRESETS, SHADOW_PRESETS, TYPE_PRESETS, radiusScale } from "./brand-presets";
@@ -269,6 +270,9 @@ export const COMMANDS: Command[] = [
     label: "Add a visual showing change over time",
     phrases: [["over time", 3], ["change over time", 3], ["coastline", 2], ["map", 2], ["timeline", 3], ["chart", 2], ["visualisation", 3], ["visualization", 3], ["data visual", 3]],
     plan: ({ direction }) => {
+      if (!isDemoDirection(direction.id)) {
+        return { kind: "noop", text: "The only built-in visual of change over time is the Ebbfield demo's coastline explorer, which doesn't suit this brand. A chart built from your own figures isn't something I can add yet." };
+      }
       const data = sectionOf(direction, "data");
       if (!data.hidden) {
         return { kind: "noop", text: "The coastline explorer already does this: it has a year slider from 2000 to a 2050 projection. I've scrolled the page to it.", focus: "data" };
@@ -289,7 +293,7 @@ export const COMMANDS: Command[] = [
     phrases: [["visual interest", 3], ["more visual", 3], ["boring", 3], ["dull", 3], ["plain", 2], ["flat", 2], ["livelier", 3], ["eye catching", 3], ["more interesting", 3], ["more colour", 2]],
     plan: ({ direction }) => {
       const t = direction.tokens;
-      const unhide = (["credibility", "data", "impact"] as SectionType[])
+      const unhide = ((isDemoDirection(direction.id) ? ["credibility", "data", "impact"] : ["credibility", "impact"]) as SectionType[])
         .filter((type) => sectionOf(direction, type).hidden)
         .map((type) => ({ path: `website.sections.${sectionIndex(type)}.hidden`, value: false }));
       const bolder = sets(t).map(({ key, set }) => {
@@ -300,7 +304,7 @@ export const COMMANDS: Command[] = [
         kind: "proposal",
         changeType: "whole_site",
         summary: "A stronger accent colour, lifted cards, and any hidden visual sections switched back on.",
-        because: "A more saturated accent gives the eye somewhere to land, a deeper card shadow adds depth, and the explorer, impact band and credibility strip break up long runs of text.",
+        because: `A more saturated accent gives the eye somewhere to land, a deeper card shadow adds depth, and the ${isDemoDirection(direction.id) ? "explorer, impact band" : "impact band"} and credibility strip break up long runs of text.`,
         changes: [...unhide, ...bolder, { path: "tokens.shadow.card", value: preset(SHADOW_PRESETS, "lifted").build(t[colorKey(t.mode)]) }],
       };
     },
