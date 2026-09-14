@@ -92,6 +92,7 @@
     --ui-color-error: #b42318;
     --ui-color-error-soft: rgb(180 35 24 / 0.08);
     --ui-color-success: #2f6f4e;
+    --ui-color-warning: #a36a00;
 
     --ui-font-display: var(--face-bricolage-grotesque), system-ui, sans-serif;
     --ui-font-body: var(--face-geist), system-ui, sans-serif;
@@ -152,6 +153,7 @@
       --ui-color-error: #ff8a7a;
       --ui-color-error-soft: rgb(255 138 122 / 0.1);
       --ui-color-success: #7cc79f;
+      --ui-color-warning: #e3a948;
       --ui-shadow-card: 0 1px 0 rgb(0 0 0 / 0.3), 0 10px 28px -18px rgb(0 0 0 / 0.7);
       --ui-shadow-panel: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 60px -30px rgb(0 0 0 / 0.8);
     }
@@ -175,6 +177,7 @@
     --ui-color-error: #ff8a7a;
     --ui-color-error-soft: rgb(255 138 122 / 0.1);
     --ui-color-success: #7cc79f;
+    --ui-color-warning: #e3a948;
     --ui-shadow-card: 0 1px 0 rgb(0 0 0 / 0.3), 0 10px 28px -18px rgb(0 0 0 / 0.7);
     --ui-shadow-panel: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 60px -30px rgb(0 0 0 / 0.8);
   }

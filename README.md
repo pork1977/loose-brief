@@ -28,6 +28,11 @@ Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`, `npm test`.
 | `src/lib/direction.ts` | The schema every brand direction has to pass, built-in or generated |
 | `src/lib/accessibility.ts` | WCAG contrast checks on a brand's tokens, and nearest passing colours |
 | `src/components/directions` | Direction cards, the identity canvas and the compare view |
+| `src/lib/color-modes.ts` | Deriving a dark colour set from a light one (and back), and the contrast control |
+| `src/lib/token-registry.ts` | What every token is for and which parts of the site use it |
+| `src/lib/health.ts` | The identity health checks |
+| `src/lib/exporters.ts` | CSS variables and W3C design token JSON |
+| `src/components/brand-system` | The brand system editor: tabs, controls and live preview |
 | `src/state` | Project state: a pure reducer, and a store that saves it in the browser and restores it safely |
 | `src/data/demo-brief.ts` | The Ebbfield demo brief |
 | `src/data/demo-directions.ts` | The three built-in directions for Ebbfield, the fictional demo brand |

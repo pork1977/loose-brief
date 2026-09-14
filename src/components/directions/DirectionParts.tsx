@@ -1,9 +1,10 @@
 "use client";
 
 import { useId, useState } from "react";
-import { formatRatio, runContrastChecks } from "@/lib/accessibility";
+import { formatRatio, runContrastChecks, type ContrastResult } from "@/lib/accessibility";
 import { brandFont } from "@/lib/brand-fonts";
 import { AREA_LABELS, type DecisionSource, type Direction } from "@/lib/direction";
+import { colorsFor, type Mode } from "@/lib/tokens";
 import { dispatch } from "@/state/project-store";
 import styles from "./DirectionParts.module.css";
 
@@ -13,12 +14,12 @@ import styles from "./DirectionParts.module.css";
  */
 
 export const PALETTE_ROLES = [
-  { key: "primary", label: "Primary", get: (d: Direction) => d.tokens.color.brand.primary },
-  { key: "secondary", label: "Secondary", get: (d: Direction) => d.tokens.color.brand.secondary },
-  { key: "accent", label: "Accent", get: (d: Direction) => d.tokens.color.brand.accent },
-  { key: "page", label: "Page", get: (d: Direction) => d.tokens.color.surface.page },
-  { key: "text", label: "Text", get: (d: Direction) => d.tokens.color.text.primary },
-  { key: "inverse", label: "Inverse", get: (d: Direction) => d.tokens.color.surface.inverse },
+  { key: "primary", label: "Primary", get: (d: Direction) => colorsFor(d.tokens).brand.primary },
+  { key: "secondary", label: "Secondary", get: (d: Direction) => colorsFor(d.tokens).brand.secondary },
+  { key: "accent", label: "Accent", get: (d: Direction) => colorsFor(d.tokens).brand.accent },
+  { key: "page", label: "Page", get: (d: Direction) => colorsFor(d.tokens).surface.page },
+  { key: "text", label: "Text", get: (d: Direction) => colorsFor(d.tokens).text.primary },
+  { key: "inverse", label: "Inverse", get: (d: Direction) => colorsFor(d.tokens).surface.inverse },
 ] as const;
 
 export function Palette({ direction, compact = false }: { direction: Direction; compact?: boolean }) {
@@ -113,10 +114,21 @@ export function WhyList({ direction }: { direction: Direction }) {
 }
 
 /** Contrast summary with an expandable list; failing checks offer a fix that updates the direction. */
-export function ContrastSummary({ direction, allowFix = true }: { direction: Direction; allowFix?: boolean }) {
+export function ContrastSummary({
+  direction,
+  mode = direction.tokens.mode,
+  allowFix = true,
+  onFix,
+}: {
+  direction: Direction;
+  mode?: Mode;
+  allowFix?: boolean;
+  /** Defaults to fixing the direction on the Directions screen. */
+  onFix?: (result: ContrastResult) => void;
+}) {
   const [open, setOpen] = useState(false);
   const listId = useId();
-  const results = runContrastChecks(direction.tokens);
+  const results = runContrastChecks(direction.tokens, mode);
   const passing = results.filter((r) => r.passes).length;
   const failing = results.filter((r) => !r.passes);
 
@@ -165,7 +177,9 @@ export function ContrastSummary({ direction, allowFix = true }: { direction: Dir
                   type="button"
                   className="ui-button ui-button--small"
                   onClick={() =>
-                    dispatch({ type: "direction/applyTokenFix", id: direction.id, path: r.foreground, value: r.suggestion as string })
+                    onFix
+                      ? onFix(r)
+                      : dispatch({ type: "direction/applyTokenFix", id: direction.id, path: r.foreground, value: r.suggestion as string })
                   }
                 >
                   Use {r.suggestion}

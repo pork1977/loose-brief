@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { DEMO_DIRECTIONS } from "@/data/demo-directions";
 import { BRIEF_STEPS, EMPTY_BRIEF, briefDraftSchema, type BriefDraft, type Material } from "@/lib/brief";
-import { directionSetSchema, type Direction } from "@/lib/direction";
-import { withToken } from "@/lib/tokens";
+import { directionSchema, directionSetSchema, type Direction } from "@/lib/direction";
+import { MODES, getPath, setPath, type Mode } from "@/lib/tokens";
 
 /*
  * Project state: everything about the visitor's current project.
@@ -10,7 +11,7 @@ import { withToken } from "@/lib/tokens";
  * in Node. Saving, restoring and the React hook live in project-store.ts.
  */
 
-export const PROJECT_VERSION = 2;
+export const PROJECT_VERSION = 3;
 
 const directionsStateSchema = z.object({
   /** "demo" for the built-in Ebbfield set, "live" once generation exists. */
@@ -21,6 +22,32 @@ const directionsStateSchema = z.object({
   items: directionSetSchema,
 });
 export type DirectionsState = z.infer<typeof directionsStateSchema>;
+
+/** One step in the brand's edit history. Each change records its value before and after, so it can be undone. */
+const editSchema = z.object({
+  id: z.string(),
+  label: z.string().max(120),
+  at: z.string(),
+  /** Consecutive edits with the same key (dragging a colour picker, say) merge into one history step. */
+  coalesceKey: z.string().nullable(),
+  changes: z.array(z.object({ path: z.string().max(120), from: z.unknown(), to: z.unknown() })).max(40),
+});
+export type BrandEdit = z.infer<typeof editSchema>;
+
+export const HISTORY_LIMIT = 60;
+const COALESCE_MS = 1500;
+
+const brandStateSchema = z.object({
+  /** The direction this brand was started from. Reset goes back to it. */
+  sourceId: z.string(),
+  /** The working copy everything after Directions reads and edits. */
+  direction: directionSchema,
+  /** Which colour set the preview is showing. A viewing choice, so not part of the history. */
+  previewMode: z.enum(MODES),
+  past: z.array(editSchema).max(HISTORY_LIMIT),
+  future: z.array(editSchema).max(HISTORY_LIMIT),
+});
+export type BrandState = z.infer<typeof brandStateSchema>;
 
 export const projectSchema = z.object({
   version: z.literal(PROJECT_VERSION),
@@ -33,6 +60,7 @@ export const projectSchema = z.object({
   briefSubmittedAt: z.string().nullable(),
   directions: directionsStateSchema.nullable(),
   selectedDirectionId: z.string().nullable(),
+  brand: brandStateSchema.nullable(),
   updatedAt: z.string().nullable(),
 });
 export type ProjectState = z.infer<typeof projectSchema>;
@@ -45,12 +73,15 @@ export const INITIAL_PROJECT: ProjectState = {
   briefSubmittedAt: null,
   directions: null,
   selectedDirectionId: null,
+  brand: null,
   updatedAt: null,
 };
 
 type SetField = {
   [K in keyof BriefDraft]: { type: "brief/set"; field: K; value: BriefDraft[K] };
 }[keyof BriefDraft];
+
+export type BrandChange = { path: string; value: unknown };
 
 export type ProjectAction =
   | SetField
@@ -63,11 +94,73 @@ export type ProjectAction =
   | { type: "directions/set"; directions: DirectionsState }
   | { type: "direction/select"; id: string }
   | { type: "direction/applyTokenFix"; id: string; path: string; value: string }
+  | { type: "brand/edit"; label: string; changes: BrandChange[]; coalesceKey?: string }
+  | { type: "brand/undo" }
+  | { type: "brand/redo" }
+  | { type: "brand/reset" }
+  | { type: "brand/setPreviewMode"; mode: Mode }
   | { type: "project/reset" };
+
+/** Parts of a direction the brand editor may change. Ids, letters and the original reasoning stay fixed. */
+const EDITABLE = /^(tokens|strategy|sample|voice|imagery|motion)(\.|$)|^visual$/;
+
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+function newBrand(direction: Direction): BrandState {
+  return { sourceId: direction.id, direction: structuredClone(direction), previewMode: direction.tokens.mode, past: [], future: [] };
+}
+
+/** Apply changes to a direction, recording before and after. Null if nothing changed or the result is invalid. */
+export function applyBrandChanges(direction: Direction, changes: BrandChange[], allowRoot = false) {
+  let next = direction;
+  const recorded: BrandEdit["changes"] = [];
+  for (const { path, value } of changes) {
+    if (!(allowRoot && path === "") && !EDITABLE.test(path)) return null;
+    let from: unknown;
+    try {
+      from = getPath(next, path);
+    } catch {
+      return null;
+    }
+    if (same(from, value)) continue;
+    next = setPath(next, path, value);
+    recorded.push({ path, from, to: value });
+  }
+  if (!recorded.length) return null;
+  // Everything the preview renders comes from here, so nothing unvalidated gets through.
+  if (!directionSchema.safeParse(next).success) return null;
+  return { direction: next, recorded };
+}
+
+function pushEdit(brand: BrandState, edit: BrandEdit, direction: Direction): BrandState {
+  const last = brand.past.at(-1);
+  const canMerge =
+    last &&
+    edit.coalesceKey !== null &&
+    last.coalesceKey === edit.coalesceKey &&
+    Date.parse(edit.at) - Date.parse(last.at) < COALESCE_MS;
+
+  if (canMerge) {
+    const merged = [...last.changes];
+    for (const change of edit.changes) {
+      const existing = merged.findIndex((c) => c.path === change.path);
+      if (existing >= 0) merged[existing] = { ...merged[existing], to: change.to };
+      else merged.push(change);
+    }
+    return { ...brand, direction, past: [...brand.past.slice(0, -1), { ...last, at: edit.at, changes: merged }], future: [] };
+  }
+  return { ...brand, direction, past: [...brand.past, edit].slice(-HISTORY_LIMIT), future: [] };
+}
+
+function replay(direction: Direction, changes: BrandEdit["changes"], use: "from" | "to"): Direction {
+  const ordered = use === "from" ? [...changes].reverse() : changes;
+  return ordered.reduce((d, change) => setPath(d, change.path, change[use]), direction);
+}
 
 export function projectReducer(state: ProjectState, action: ProjectAction, now = new Date().toISOString()): ProjectState {
   const touched = (next: Omit<ProjectState, "updatedAt">): ProjectState => ({ ...next, updatedAt: now });
   const lastStep = BRIEF_STEPS.length - 1;
+  const editId = () => `${now}-${state.brand?.past.length ?? 0}`;
 
   switch (action.type) {
     case "brief/set":
@@ -87,6 +180,7 @@ export function projectReducer(state: ProjectState, action: ProjectAction, now =
         briefSubmittedAt: null,
         directions: null,
         selectedDirectionId: null,
+        brand: null,
       });
 
     case "brief/submit":
@@ -118,29 +212,95 @@ export function projectReducer(state: ProjectState, action: ProjectAction, now =
         ...state,
         directions: action.directions,
         selectedDirectionId: stillThere ? state.selectedDirectionId : null,
+        brand: stillThere ? state.brand : null,
       });
     }
 
-    case "direction/select":
-      if (!state.directions?.items.some((d) => d.id === action.id)) return state;
-      return touched({ ...state, selectedDirectionId: action.id });
+    case "direction/select": {
+      const direction = state.directions?.items.find((d) => d.id === action.id);
+      if (!direction) return state;
+      // Choosing the direction you're already building on keeps your edits.
+      const brand = state.brand?.sourceId === action.id ? state.brand : newBrand(direction);
+      return touched({ ...state, selectedDirectionId: action.id, brand });
+    }
 
     case "direction/applyTokenFix": {
       if (!state.directions) return state;
-      let changed = false;
-      const items = state.directions.items.map((d): Direction => {
-        if (d.id !== action.id) return d;
-        try {
-          const tokens = withToken(d.tokens, action.path, action.value);
-          changed = true;
-          return { ...d, tokens };
-        } catch {
-          return d;
+      const target = state.directions.items.find((d) => d.id === action.id);
+      if (!target) return state;
+      const applied = applyBrandChanges(target, [{ path: `tokens.${action.path}`, value: action.value }]);
+      if (!applied) return state;
+      const items = state.directions.items.map((d) => (d.id === action.id ? applied.direction : d));
+
+      // If this is the direction being built on, the fix lands in its history too, so it can be undone.
+      let brand = state.brand;
+      if (brand && brand.sourceId === action.id) {
+        const onBrand = applyBrandChanges(brand.direction, [{ path: `tokens.${action.path}`, value: action.value }]);
+        if (onBrand) {
+          brand = pushEdit(brand, { id: editId(), label: "Contrast fix", at: now, coalesceKey: null, changes: onBrand.recorded }, onBrand.direction);
         }
-      });
-      if (!changed) return state;
-      return touched({ ...state, directions: { ...state.directions, items } });
+      }
+      return touched({ ...state, directions: { ...state.directions, items }, brand });
     }
+
+    case "brand/edit": {
+      if (!state.brand) return state;
+      const applied = applyBrandChanges(state.brand.direction, action.changes);
+      if (!applied) return state;
+      const edit: BrandEdit = {
+        id: editId(),
+        label: action.label.slice(0, 120),
+        at: now,
+        coalesceKey: action.coalesceKey ?? null,
+        changes: applied.recorded,
+      };
+      return touched({ ...state, brand: pushEdit(state.brand, edit, applied.direction) });
+    }
+
+    case "brand/undo": {
+      const brand = state.brand;
+      const edit = brand?.past.at(-1);
+      if (!brand || !edit) return state;
+      return touched({
+        ...state,
+        brand: {
+          ...brand,
+          direction: replay(brand.direction, edit.changes, "from"),
+          past: brand.past.slice(0, -1),
+          future: [edit, ...brand.future].slice(0, HISTORY_LIMIT),
+        },
+      });
+    }
+
+    case "brand/redo": {
+      const brand = state.brand;
+      const edit = brand?.future[0];
+      if (!brand || !edit) return state;
+      return touched({
+        ...state,
+        brand: {
+          ...brand,
+          direction: replay(brand.direction, edit.changes, "to"),
+          past: [...brand.past, edit].slice(-HISTORY_LIMIT),
+          future: brand.future.slice(1),
+        },
+      });
+    }
+
+    case "brand/reset": {
+      const brand = state.brand;
+      const source = state.directions?.items.find((d) => d.id === brand?.sourceId);
+      if (!brand || !source) return state;
+      // Reset is one history step, so it can be undone like anything else.
+      const applied = applyBrandChanges(brand.direction, [{ path: "", value: source }], true);
+      if (!applied) return state;
+      const edit: BrandEdit = { id: editId(), label: `Reset to ${source.name}`, at: now, coalesceKey: null, changes: applied.recorded };
+      return touched({ ...state, brand: { ...pushEdit(brand, edit, applied.direction), previewMode: source.tokens.mode } });
+    }
+
+    case "brand/setPreviewMode":
+      if (!state.brand || state.brand.previewMode === action.mode) return state;
+      return touched({ ...state, brand: { ...state.brand, previewMode: action.mode } });
 
     case "project/reset":
       return { ...INITIAL_PROJECT, updatedAt: now };
@@ -150,11 +310,32 @@ export function projectReducer(state: ProjectState, action: ProjectAction, now =
 /** Earlier saved versions, upgraded one step at a time. */
 function migrate(data: unknown): unknown {
   if (typeof data !== "object" || data === null) return data;
-  const saved = data as Record<string, unknown>;
+  let saved = data as Record<string, unknown>;
+
   if (saved.version === 1) {
-    return { ...saved, version: 2, directions: null, selectedDirectionId: null };
+    saved = { ...saved, version: 2, directions: null, selectedDirectionId: null };
   }
-  return data;
+
+  if (saved.version === 2) {
+    // Directions gained strategy, dark colours and spacing. Demo sets are swapped for the current
+    // built-in versions; anything else can't be upgraded, so it's dropped.
+    const directions = saved.directions as { source?: string; items?: { id: string }[] } | null;
+    const upgraded =
+      directions?.source === "demo" && Array.isArray(directions.items)
+        ? { ...directions, items: directions.items.map((d) => DEMO_DIRECTIONS.find((demo) => demo.id === d.id)) }
+        : null;
+    const valid = upgraded && upgraded.items.every(Boolean) ? upgraded : null;
+    const selected = valid?.items.find((d) => d?.id === saved.selectedDirectionId) ?? null;
+    saved = {
+      ...saved,
+      version: 3,
+      directions: valid,
+      selectedDirectionId: selected ? saved.selectedDirectionId : null,
+      brand: selected ? newBrand(selected as Direction) : null,
+    };
+  }
+
+  return saved;
 }
 
 /**

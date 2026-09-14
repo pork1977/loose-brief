@@ -4,7 +4,7 @@ import { DEMO_DIRECTIONS, littoralIntelligence } from "../data/demo-directions";
 import { contrastRatio, runContrastChecks, suggestContrastFix } from "./accessibility";
 import { directionSchema, directionSetSchema, DESIGN_AREAS } from "./direction";
 import { rgbToOklab, hexToRgb } from "./palette";
-import { brandTokensSchema, compileTokens, withToken } from "./tokens";
+import { brandTokensSchema, colorsFor, compileTokens, withToken } from "./tokens";
 
 test("every demo direction passes the schema live generation will use", () => {
   for (const direction of DEMO_DIRECTIONS) {
@@ -32,7 +32,7 @@ test("the three directions are genuinely different, not three shades of one idea
     assert.notEqual(x.tokens.typography.display.family, y.tokens.typography.display.family, `${x.name} and ${y.name} share a display face`);
     assert.notEqual(x.visual, y.visual);
     // Pages differ clearly (a dark page against a light one, or two clearly different light tones).
-    assert.ok(labDistance(x.tokens.color.button.primary, y.tokens.color.button.primary) > 0.1, `${x.name} and ${y.name} buttons look alike`);
+    assert.ok(labDistance(colorsFor(x.tokens).button.primary, colorsFor(y.tokens).button.primary) > 0.1, `${x.name} and ${y.name} buttons look alike`);
   }
   assert.notEqual(a.tokens.radius.button, c.tokens.radius.button);
 });

@@ -1,0 +1,158 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-s);
+  padding-block: var(--ui-space-m);
+  border-top: 1px solid var(--ui-color-border);
+}
+.section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.sectionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ui-space-xs);
+}
+.sectionTitle {
+  font-size: var(--ui-text-l);
+}
+.sectionDescription {
+  margin-top: 0.2rem;
+  font-size: var(--ui-text-s);
+  color: var(--ui-color-text-secondary);
+}
+.sectionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-3xs);
+}
+
+/* Colour rows */
+.colour {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--ui-space-xs);
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-control);
+  background: var(--ui-color-surface-raised);
+  transition: border-color var(--ui-motion-fast) var(--ui-ease);
+}
+.colour:hover,
+.colour:focus-within {
+  border-color: var(--ui-color-border-strong);
+}
+.picker {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--ui-color-border-strong);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+.picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.picker::-webkit-color-swatch {
+  border: 0;
+  border-radius: 5px;
+}
+.picker::-moz-color-swatch {
+  border: 0;
+  border-radius: 5px;
+}
+.colourText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.colourLabel {
+  font-size: var(--ui-text-s);
+  font-weight: 600;
+}
+.colourDescription {
+  font-size: var(--ui-text-xs);
+  color: var(--ui-color-text-secondary);
+}
+.colourMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.hex {
+  width: 6.25rem;
+  font-family: var(--ui-font-mono);
+  text-transform: uppercase;
+}
+
+/* Sliders */
+.slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.slider input[type="range"] {
+  width: 100%;
+  accent-color: var(--ui-color-accent);
+}
+.sliderValue {
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+  color: var(--ui-color-text-secondary);
+}
+
+/* Segmented control */
+.segmentedField {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.segmentedField legend.ui-label {
+  margin-bottom: 0.4rem;
+}
+.segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border-radius: calc(var(--ui-radius-control) + 3px);
+  background: var(--ui-color-surface-sunken);
+}
+.segment {
+  position: relative;
+}
+.segment input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.segment span {
+  display: grid;
+  place-items: center;
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  border-radius: var(--ui-radius-control);
+  font-size: var(--ui-text-s);
+  color: var(--ui-color-text-secondary);
+  transition:
+    background-color var(--ui-motion-fast) var(--ui-ease),
+    color var(--ui-motion-fast) var(--ui-ease);
+}
+.segment input:checked + span {
+  background: var(--ui-color-surface-raised);
+  color: var(--ui-color-text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+.segment input:focus-visible + span {
+  outline: 2px solid var(--ui-color-accent);
+  outline-offset: 1px;
+}

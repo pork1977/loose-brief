@@ -9,6 +9,7 @@ import { DEMO_BRIEF, isDemoBrief } from "@/data/demo-brief";
 import { DEMO_DIRECTIONS } from "@/data/demo-directions";
 import { briefKey } from "@/lib/brief";
 import { directionSetSchema, type Direction } from "@/lib/direction";
+import { colorsFor } from "@/lib/tokens";
 import { clearMaterialFiles } from "@/lib/material-files";
 import { forgetAllThumbnails } from "@/lib/material-thumbnails";
 import { directionsAreStale, isBriefDone, selectedDirection } from "@/state/progress";
@@ -36,6 +37,7 @@ export function DirectionsWorkspace() {
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const [confirmDemo, setConfirmDemo] = useState(false);
+  const [pendingSwitch, setPendingSwitch] = useState<string | null>(null);
 
   const onGenerated = useCallback(() => {
     if (project) storeDemoDirections(project.state.brief);
@@ -64,7 +66,7 @@ export function DirectionsWorkspace() {
   const demo = isDemoBrief(state.brief);
 
   if (!state.directions) {
-    if (demo) return <GeneratingDirections brandName={brandName} colours={DEMO_DIRECTIONS.map((d) => d.tokens.color.button.primary)} onDone={onGenerated} />;
+    if (demo) return <GeneratingDirections brandName={brandName} colours={DEMO_DIRECTIONS.map((d) => colorsFor(d.tokens).button.primary)} onDone={onGenerated} />;
     return (
       <>
         <EmptyState
@@ -109,7 +111,13 @@ export function DirectionsWorkspace() {
   const comparePair =
     compareIds.length === 2 ? (compareIds.map((id) => directions.find((d) => d.id === id)).filter(Boolean) as [Direction, Direction]) : null;
 
-  const select = (id: string) => {
+  const select = (id: string, confirmed = false) => {
+    // Switching away from a direction you've already edited throws those edits away, so ask first.
+    const brand = state.brand;
+    if (!confirmed && brand && brand.sourceId !== id && brand.past.length > 0) {
+      setPendingSwitch(id);
+      return;
+    }
     dispatch({ type: "direction/select", id });
     // The canvas regroups inside a transition, so its named nodes animate to their new places.
     startTransition(() => {
@@ -235,6 +243,22 @@ export function DirectionsWorkspace() {
           ) : null}
         </div>
       ) : null}
+
+      <ConfirmDialog
+        open={pendingSwitch !== null}
+        title="Switch direction?"
+        body={`You've made ${state.brand?.past.length ?? 0} change${state.brand?.past.length === 1 ? "" : "s"} to ${
+          directions.find((d) => d.id === state.brand?.sourceId)?.name ?? "your current direction"
+        } in the brand system. Switching starts again from the new direction, and those changes will be lost.`}
+        confirmLabel="Switch and lose changes"
+        destructive
+        onCancel={() => setPendingSwitch(null)}
+        onConfirm={() => {
+          const id = pendingSwitch;
+          setPendingSwitch(null);
+          if (id) select(id, true);
+        }}
+      />
 
       <CompareDialog
         open={compareOpen}

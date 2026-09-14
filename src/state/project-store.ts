@@ -67,20 +67,57 @@ function subscribe(listener: () => void) {
   };
 }
 
+/*
+ * Saving waits for a short pause. Dragging a colour picker dispatches dozens
+ * of edits a second, and writing the whole project to storage for each one
+ * would make the drag stutter. Anything pending is written straight away if
+ * the page is hidden or closed.
+ */
+const SAVE_DELAY_MS = 300;
+let saveTimer: number | null = null;
+
+function writeNow() {
+  if (saveTimer !== null) {
+    window.clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  if (!snapshot) return;
+  let saveStatus: SaveStatus = "saved";
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot.state));
+  } catch {
+    saveStatus = "failed";
+  }
+  if (saveStatus !== snapshot.saveStatus) {
+    snapshot = { ...snapshot, saveStatus };
+    emit();
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("pagehide", writeNow);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") writeNow();
+  });
+}
+
 export function dispatch(action: ProjectAction) {
   const current = getSnapshot();
   const next = projectReducer(current.state, action);
   if (next === current.state) return;
 
-  let saveStatus: SaveStatus = "saved";
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  } catch {
-    saveStatus = "failed";
-  }
-  snapshot = { state: next, saveStatus, restoreFailed: current.restoreFailed && action.type !== "project/reset" };
+  snapshot = {
+    state: next,
+    saveStatus: current.saveStatus === "failed" ? "failed" : "saved",
+    restoreFailed: current.restoreFailed && action.type !== "project/reset",
+  };
   emit();
+  if (saveTimer !== null) window.clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(writeNow, SAVE_DELAY_MS);
 }
+
+/** Write any pending change immediately, e.g. before navigating to another page. */
+export const flushProject = writeNow;
 
 export function dismissRestoreNotice() {
   const current = getSnapshot();

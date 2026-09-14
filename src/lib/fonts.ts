@@ -1,5 +1,7 @@
 import {
   Bricolage_Grotesque,
+  DM_Sans,
+  Fraunces,
   Geist,
   Geist_Mono,
   IBM_Plex_Mono,
@@ -7,8 +9,12 @@ import {
   Instrument_Serif,
   Inter,
   JetBrains_Mono,
+  Manrope,
   Nunito,
   Nunito_Sans,
+  Quicksand,
+  Sora,
+  Source_Serif_4,
   Space_Grotesk,
 } from "next/font/google";
 
@@ -30,54 +36,39 @@ const bricolage = Bricolage_Grotesque({
 const geist = Geist({ subsets: ["latin"], variable: "--face-geist" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--face-geist-mono" });
 
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  variable: "--face-instrument-serif",
-  preload: false,
-});
-const inter = Inter({ subsets: ["latin"], variable: "--face-inter", preload: false });
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--face-ibm-plex-mono",
-  preload: false,
-});
-const ibmPlexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  variable: "--face-ibm-plex-sans",
-  preload: false,
-});
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--face-space-grotesk",
-  preload: false,
-});
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--face-jetbrains-mono",
-  preload: false,
-});
-const nunito = Nunito({ subsets: ["latin"], variable: "--face-nunito", preload: false });
-const nunitoSans = Nunito_Sans({
-  subsets: ["latin"],
-  variable: "--face-nunito-sans",
-  preload: false,
-});
+const instrumentSerif = Instrument_Serif({ subsets: ["latin"], preload: false, weight: "400", style: ["normal", "italic"], variable: "--face-instrument-serif" });
+const fraunces = Fraunces({ subsets: ["latin"], preload: false, variable: "--face-fraunces" });
+const sourceSerif = Source_Serif_4({ subsets: ["latin"], preload: false, variable: "--face-source-serif-4" });
+const inter = Inter({ subsets: ["latin"], preload: false, variable: "--face-inter" });
+const ibmPlexSans = IBM_Plex_Sans({ subsets: ["latin"], preload: false, variable: "--face-ibm-plex-sans" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], preload: false, variable: "--face-space-grotesk" });
+const dmSans = DM_Sans({ subsets: ["latin"], preload: false, variable: "--face-dm-sans" });
+const manrope = Manrope({ subsets: ["latin"], preload: false, variable: "--face-manrope" });
+const sora = Sora({ subsets: ["latin"], preload: false, variable: "--face-sora" });
+const nunito = Nunito({ subsets: ["latin"], preload: false, variable: "--face-nunito" });
+const nunitoSans = Nunito_Sans({ subsets: ["latin"], preload: false, variable: "--face-nunito-sans" });
+const quicksand = Quicksand({ subsets: ["latin"], preload: false, variable: "--face-quicksand" });
+const ibmPlexMono = IBM_Plex_Mono({ subsets: ["latin"], preload: false, weight: ["400", "500"], variable: "--face-ibm-plex-mono" });
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], preload: false, variable: "--face-jetbrains-mono" });
 
 export const fontVariables = [
   bricolage,
   geist,
   geistMono,
   instrumentSerif,
+  fraunces,
+  sourceSerif,
   inter,
-  ibmPlexMono,
   ibmPlexSans,
   spaceGrotesk,
-  jetbrainsMono,
+  dmSans,
+  manrope,
+  sora,
   nunito,
   nunitoSans,
+  quicksand,
+  ibmPlexMono,
+  jetbrainsMono,
 ]
   .map((font) => font.variable)
   .join(" ");

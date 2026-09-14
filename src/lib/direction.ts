@@ -46,6 +46,12 @@ export const directionSchema = z.object({
   name: text(40),
   description: text(120),
   visual: z.enum(VISUAL_STYLES),
+  strategy: z.object({
+    /** Who it's for, what it is, and why it's different, in a sentence or two. */
+    positioning: text(280),
+    /** What the brand commits to, short enough to remember. */
+    promise: text(120),
+  }),
   sample: z.object({
     eyebrow: text(60),
     headline: text(90),
@@ -62,6 +68,7 @@ export const directionSchema = z.object({
   imagery: z.object({
     style: text(120),
     treatment: text(120),
+    illustration: text(160),
   }),
   motion: z.object({
     style: text(80),

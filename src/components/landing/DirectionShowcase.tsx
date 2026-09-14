@@ -5,6 +5,7 @@ import { BrandScope } from "@/components/brand/BrandScope";
 import { MiniSite } from "@/components/brand/MiniSite";
 import { DEMO_BRAND_NAME, DEMO_DIRECTIONS } from "@/data/demo-directions";
 import { brandFont } from "@/lib/brand-fonts";
+import { colorsFor } from "@/lib/tokens";
 import styles from "./DirectionShowcase.module.css";
 
 const INTERVAL_MS = 6500;
@@ -79,7 +80,7 @@ export function DirectionShowcase() {
                 <span className={styles.tabText}>
                   <span className={styles.tabName}>{d.name}</span>
                   <span className={styles.tabSwatches} aria-hidden="true">
-                    {[d.tokens.color.brand.primary, d.tokens.color.brand.secondary, d.tokens.color.brand.accent, d.tokens.color.surface.page].map(
+                    {[colorsFor(d.tokens).brand.primary, colorsFor(d.tokens).brand.secondary, colorsFor(d.tokens).brand.accent, colorsFor(d.tokens).surface.page].map(
                       (c) => (
                         <span key={c} className="ui-swatch" style={{ background: c }} />
                       ),
@@ -140,8 +141,8 @@ export function DirectionShowcase() {
         <div>
           <dt>Primary</dt>
           <dd>
-            <span className="ui-swatch" style={{ background: tokens.color.button.primary }} aria-hidden="true" />
-            {tokens.color.button.primary}
+            <span className="ui-swatch" style={{ background: colorsFor(tokens).button.primary }} aria-hidden="true" />
+            {colorsFor(tokens).button.primary}
           </dd>
         </div>
       </dl>

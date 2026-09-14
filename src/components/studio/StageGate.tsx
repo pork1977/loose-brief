@@ -17,7 +17,7 @@ import styles from "./StageGate.module.css";
  * page, carrying the same view transition name as its card, so the preview
  * travels across from the Directions screen.
  */
-export function StageGate({ stageId, children }: { stageId: Stage["id"]; children: ReactNode }) {
+export function StageGate({ stageId, showSelection = true, children }: { stageId: Stage["id"]; showSelection?: boolean; children: ReactNode }) {
   const project = useProject();
 
   if (!project) {
@@ -47,6 +47,8 @@ export function StageGate({ stageId, children }: { stageId: Stage["id"]; childre
       </div>
     );
   }
+
+  if (!showSelection) return <>{children}</>;
 
   return (
     <div className={styles.page}>

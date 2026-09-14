@@ -6,6 +6,7 @@ import { CoastlineVisual } from "@/components/brand/CoastlineVisual";
 import { MotionPreview } from "@/components/brand/MotionPreview";
 import { brandFont } from "@/lib/brand-fonts";
 import { AREA_LABELS, DESIGN_AREAS, type DesignArea, type Direction } from "@/lib/direction";
+import { colorsFor } from "@/lib/tokens";
 import styles from "./IdentityCanvas.module.css";
 
 export type CanvasMode = "constellation" | "system";
@@ -198,11 +199,12 @@ function slug(value: string) {
 
 function AreaVisual({ area, direction }: { area: DesignArea; direction: Direction }) {
   const t = direction.tokens;
+  const c = colorsFor(t);
   switch (area) {
     case "colour":
       return (
         <span className={styles.swatches}>
-          {[t.color.brand.primary, t.color.brand.secondary, t.color.brand.accent, t.color.surface.page, t.color.text.primary].map((c, i) => (
+          {[c.brand.primary, c.brand.secondary, c.brand.accent, c.surface.page, c.text.primary].map((c, i) => (
             <span key={`${c}-${i}`} style={{ background: c }} />
           ))}
         </span>

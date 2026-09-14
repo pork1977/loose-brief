@@ -1,4 +1,6 @@
+import { deriveColorSet } from "@/lib/color-modes";
 import type { Direction } from "@/lib/direction";
+import type { ColorSet } from "@/lib/tokens";
 
 /*
  * The three built-in directions for the Ebbfield demo brand.
@@ -17,12 +19,45 @@ export type DemoDirection = Direction;
 
 export const DEMO_BRAND_NAME = "Ebbfield";
 
+/*
+ * Each direction's palette is written by hand for the mode it leads with.
+ * The other mode is derived by rule (lib/color-modes.ts) as a starting point.
+ */
+const littoralColors: ColorSet = {
+  brand: { primary: "#083B66", secondary: "#D8B982", accent: "#53D6C7" },
+  surface: { page: "#F6F4EE", card: "#FFFFFF", inverse: "#071B2A" },
+  text: { primary: "#102A43", secondary: "#52606D", inverse: "#F6F4EE" },
+  button: { primary: "#083B66", primaryText: "#FFFFFF" },
+  border: { subtle: "#DDD6C8" },
+};
+
+const signalColors: ColorSet = {
+  brand: { primary: "#0F2A47", secondary: "#22D3EE", accent: "#C6F432" },
+  surface: { page: "#07111F", card: "#0C1B2E", inverse: "#030A14" },
+  text: { primary: "#E6F1FA", secondary: "#8FA6BC", inverse: "#E6F1FA" },
+  button: { primary: "#22D3EE", primaryText: "#03121C" },
+  border: { subtle: "#1C3350" },
+};
+
+const sharedColors: ColorSet = {
+  brand: { primary: "#1F6B63", secondary: "#8FD3C1", accent: "#E0694A" },
+  surface: { page: "#FBF6EE", card: "#FFFFFF", inverse: "#1E4D4A" },
+  text: { primary: "#243B3A", secondary: "#5B6B69", inverse: "#FBF6EE" },
+  button: { primary: "#1F6B63", primaryText: "#FFFFFF" },
+  border: { subtle: "#EADFCF" },
+};
+
 export const littoralIntelligence: Direction = {
   id: "littoral-intelligence",
   letter: "A",
   name: "Littoral Intelligence",
   description: "Quiet, editorial and scientifically credible.",
   visual: "contours",
+  strategy: {
+    positioning:
+      "For local authorities and coastal researchers who need evidence they can act on, Ebbfield is the coastal intelligence platform that turns shoreline data into clear, defensible decisions.",
+    promise: "Evidence you can plan around.",
+  },
   sample: {
     eyebrow: "Coastal intelligence",
     headline: "See the shoreline before it changes.",
@@ -39,6 +74,7 @@ export const littoralIntelligence: Direction = {
   imagery: {
     style: "Contour lines, survey marks and field-note textures",
     treatment: "Muted colour, fine lines, lots of paper-coloured space",
+    illustration: "Fine-line diagrams in the style of survey sheets: contours, transects and small set labels.",
   },
   motion: {
     style: "Slow and fluid",
@@ -99,18 +135,15 @@ export const littoralIntelligence: Direction = {
   ],
   tradeOff: "The quiet, editorial feel could seem slow to a planner who wants the numbers straight away.",
   tokens: {
-    color: {
-      brand: { primary: "#083B66", secondary: "#D8B982", accent: "#53D6C7" },
-      surface: { page: "#F6F4EE", card: "#FFFFFF", inverse: "#071B2A" },
-      text: { primary: "#102A43", secondary: "#52606D", inverse: "#F6F4EE" },
-      button: { primary: "#083B66", primaryText: "#FFFFFF" },
-      border: { subtle: "#DDD6C8" },
-    },
+    mode: "light",
+    color: littoralColors,
+    colorDark: deriveColorSet(littoralColors, "dark"),
     typography: {
       display: { family: "instrument-serif", weight: 400, lineHeight: 0.95, letterSpacing: "-0.01em" },
       body: { family: "inter", weight: 400, lineHeight: 1.6 },
       label: { family: "ibm-plex-mono", weight: 500, letterSpacing: "0.08em", transform: "uppercase" },
     },
+    space: { base: "1rem", ratio: 1.6 },
     radius: { small: "2px", medium: "6px", large: "12px", button: "small", card: "medium" },
     shadow: { card: "0 1px 0 rgba(8, 59, 102, 0.08), 0 12px 32px -18px rgba(8, 59, 102, 0.25)" },
     motion: { fast: "200ms", normal: "500ms", slow: "900ms", easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
@@ -123,6 +156,11 @@ export const signalCoast: Direction = {
   name: "Signal Coast",
   description: "Technical and data-led, built around live measurement.",
   visual: "grid",
+  strategy: {
+    positioning:
+      "For researchers and planners who work from data, Ebbfield is the live coastal monitoring platform that measures shoreline change every tide, in one model.",
+    promise: "Every change measured, as it happens.",
+  },
   sample: {
     eyebrow: "Shoreline monitor / live",
     headline: "Coastal change, measured every tide.",
@@ -139,6 +177,7 @@ export const signalCoast: Direction = {
   imagery: {
     style: "Data grids, stepped contour lines and labelled survey points",
     treatment: "Dark ground, thin bright lines, one highlight colour for live readings",
+    illustration: "Schematic grids and stepped contours with labelled measurement points, like instrument output.",
   },
   motion: {
     style: "Quick and exact",
@@ -196,18 +235,15 @@ export const signalCoast: Direction = {
   ],
   tradeOff: "Hopeful is the trait this route plays down most. It may feel cold to community groups.",
   tokens: {
-    color: {
-      brand: { primary: "#0F2A47", secondary: "#22D3EE", accent: "#C6F432" },
-      surface: { page: "#07111F", card: "#0C1B2E", inverse: "#030A14" },
-      text: { primary: "#E6F1FA", secondary: "#8FA6BC", inverse: "#E6F1FA" },
-      button: { primary: "#22D3EE", primaryText: "#03121C" },
-      border: { subtle: "#1C3350" },
-    },
+    mode: "dark",
+    color: deriveColorSet(signalColors, "light"),
+    colorDark: signalColors,
     typography: {
       display: { family: "space-grotesk", weight: 600, lineHeight: 1, letterSpacing: "-0.03em" },
       body: { family: "ibm-plex-sans", weight: 400, lineHeight: 1.55 },
       label: { family: "jetbrains-mono", weight: 500, letterSpacing: "0.04em", transform: "uppercase" },
     },
+    space: { base: "0.875rem", ratio: 1.4 },
     radius: { small: "2px", medium: "4px", large: "6px", button: "small", card: "small" },
     shadow: { card: "0 0 0 1px rgba(34, 211, 238, 0.12)" },
     motion: { fast: "120ms", normal: "240ms", slow: "480ms", easing: "cubic-bezier(0.2, 0, 0, 1)" },
@@ -220,6 +256,11 @@ export const sharedShore: Direction = {
   name: "Shared Shore",
   description: "Warm, approachable and focused on the people who live there.",
   visual: "soft",
+  strategy: {
+    positioning:
+      "For coastal communities and the councils that serve them, Ebbfield makes shoreline change easy to understand and shows practical next steps people can agree on.",
+    promise: "A clearer shared picture of your coast.",
+  },
   sample: {
     eyebrow: "For coastal communities",
     headline: "Plan for the coast you share.",
@@ -236,6 +277,7 @@ export const sharedShore: Direction = {
   imagery: {
     style: "Soft shapes of land, water and sun, with room for real community photos later",
     treatment: "Rounded forms, gentle colour, plenty of warmth",
+    illustration: "Simple rounded shapes of land, water and sun, with soft edges and friendly proportions.",
   },
   motion: {
     style: "Gentle with a little bounce",
@@ -293,18 +335,15 @@ export const sharedShore: Direction = {
   ],
   tradeOff: "Scientific comes through least. Research partners may find it too soft.",
   tokens: {
-    color: {
-      brand: { primary: "#1F6B63", secondary: "#8FD3C1", accent: "#E0694A" },
-      surface: { page: "#FBF6EE", card: "#FFFFFF", inverse: "#1E4D4A" },
-      text: { primary: "#243B3A", secondary: "#5B6B69", inverse: "#FBF6EE" },
-      button: { primary: "#1F6B63", primaryText: "#FFFFFF" },
-      border: { subtle: "#EADFCF" },
-    },
+    mode: "light",
+    color: sharedColors,
+    colorDark: deriveColorSet(sharedColors, "dark"),
     typography: {
       display: { family: "nunito", weight: 800, lineHeight: 1.05, letterSpacing: "-0.02em" },
       body: { family: "nunito-sans", weight: 400, lineHeight: 1.6 },
       label: { family: "nunito-sans", weight: 700, letterSpacing: "0.01em", transform: "none" },
     },
+    space: { base: "1rem", ratio: 1.5 },
     radius: { small: "10px", medium: "18px", large: "28px", button: "pill", card: "large" },
     shadow: { card: "0 18px 40px -24px rgba(31, 107, 99, 0.35)" },
     motion: { fast: "180ms", normal: "380ms", slow: "700ms", easing: "cubic-bezier(0.34, 1.56, 0.64, 1)" },

@@ -56,6 +56,53 @@ export function oklabToRgb([L, a, b]: Lab): [number, number, number] {
   return rgb.map((v) => Math.round(Math.max(0, Math.min(1, toGamma(v))) * 255)) as [number, number, number];
 }
 
+/** Linear sRGB channels before clamping, used to tell whether a colour is displayable. */
+function oklabToLinear([L, a, b]: Lab): [number, number, number] {
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+}
+
+export type Oklch = { l: number; c: number; h: number };
+
+export function hexToOklch(hex: string): Oklch {
+  const rgb = hexToRgb(hex);
+  if (!rgb) throw new Error(`Not a hex colour: ${hex}`);
+  const [L, a, b] = rgbToOklab(...rgb);
+  return { l: L, c: Math.hypot(a, b), h: ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360 };
+}
+
+/**
+ * OKLCH to hex. If the colour can't be shown on a normal screen, chroma is
+ * reduced until it can, which keeps lightness and hue instead of letting the
+ * channels clip (clipping shifts the hue, sometimes badly).
+ */
+export function oklchToHex({ l, c, h }: Oklch): string {
+  const L = Math.max(0, Math.min(1, l));
+  const rad = (h * Math.PI) / 180;
+  const inGamut = (chroma: number) =>
+    oklabToLinear([L, chroma * Math.cos(rad), chroma * Math.sin(rad)]).every((v) => v >= -0.0005 && v <= 1.0005);
+  let chroma = Math.max(0, c);
+  if (!inGamut(chroma)) {
+    // Binary search for the most chroma that still fits.
+    let low = 0;
+    let high = chroma;
+    for (let i = 0; i < 24; i++) {
+      const mid = (low + high) / 2;
+      if (inGamut(mid)) low = mid;
+      else high = mid;
+    }
+    chroma = low;
+  }
+  const [r, g, b] = oklabToRgb([L, chroma * Math.cos(rad), chroma * Math.sin(rad)]);
+  return rgbToHex(r, g, b);
+}
+
 export function rgbToHex(r: number, g: number, b: number): string {
   return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`.toUpperCase();
 }

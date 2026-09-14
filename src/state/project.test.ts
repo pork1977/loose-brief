@@ -4,7 +4,7 @@ import { DEMO_BRIEF } from "../data/demo-brief";
 import { DEMO_DIRECTIONS } from "../data/demo-directions";
 import { briefKey } from "../lib/brief";
 import { INITIAL_PROJECT, projectReducer, restoreProject, type ProjectState } from "./project";
-import { directionsAreStale, stageStatuses } from "./progress";
+import { directionsAreStale, selectedDirection, stageStatuses } from "./progress";
 
 const NOW = "2026-09-13T12:00:00.000Z";
 
@@ -77,10 +77,124 @@ test("a Phase 3 save (version 1) upgrades without losing the brief", () => {
   const v1 = { version: 1, brief: DEMO_BRIEF, briefStep: 2, furthestStep: 4, briefSubmittedAt: NOW, updatedAt: NOW };
   const { state, problem } = restoreProject(JSON.stringify(v1));
   assert.equal(problem, "none");
-  assert.equal(state.version, 2);
+  assert.equal(state.version, 3);
   assert.deepEqual(state.brief, DEMO_BRIEF);
   assert.equal(state.directions, null);
   assert.equal(state.selectedDirectionId, null);
+  assert.equal(state.brand, null);
+});
+
+test("a Phase 4 save (version 2) with a selected demo direction upgrades and gets a brand to edit", () => {
+  // Phase 4 directions had no strategy, dark colours or spacing.
+  const oldItems = DEMO_DIRECTIONS.map((d) => ({ id: d.id, letter: d.letter, name: d.name }));
+  const v2 = {
+    version: 2,
+    brief: DEMO_BRIEF,
+    briefStep: 0,
+    furthestStep: 4,
+    briefSubmittedAt: NOW,
+    directions: { source: "demo", briefKey: briefKey(DEMO_BRIEF), createdAt: NOW, items: oldItems },
+    selectedDirectionId: "signal-coast",
+    updatedAt: NOW,
+  };
+  const { state, problem } = restoreProject(JSON.stringify(v2));
+  assert.equal(problem, "none");
+  assert.equal(state.directions?.items.length, 3);
+  assert.equal(state.selectedDirectionId, "signal-coast");
+  assert.equal(state.brand?.sourceId, "signal-coast");
+  assert.equal(state.brand?.previewMode, "dark");
+});
+
+const selected = (id = "littoral-intelligence") => projectReducer(withDirections(), { type: "direction/select", id }, NOW);
+const later = (ms: number) => new Date(Date.parse(NOW) + ms).toISOString();
+
+test("selecting a direction starts a brand from a copy of it", () => {
+  const state = selected();
+  assert.equal(state.brand?.sourceId, "littoral-intelligence");
+  assert.deepEqual(state.brand?.direction, DEMO_DIRECTIONS[0]);
+  assert.notEqual(state.brand?.direction, DEMO_DIRECTIONS[0], "should be a copy, not the same object");
+});
+
+test("brand edits apply, undo and redo", () => {
+  let state = selected();
+  state = projectReducer(state, { type: "brand/edit", label: "Primary colour", changes: [{ path: "tokens.color.brand.primary", value: "#1F5E52" }] }, NOW);
+  assert.equal(state.brand?.direction.tokens.color.brand.primary, "#1F5E52");
+  assert.equal(state.brand?.past.length, 1);
+
+  state = projectReducer(state, { type: "brand/undo" }, later(1));
+  assert.equal(state.brand?.direction.tokens.color.brand.primary, "#083B66");
+  assert.equal(state.brand?.future.length, 1);
+
+  state = projectReducer(state, { type: "brand/redo" }, later(2));
+  assert.equal(state.brand?.direction.tokens.color.brand.primary, "#1F5E52");
+  assert.equal(state.brand?.future.length, 0);
+});
+
+test("edits that would break the schema are refused", () => {
+  const state = selected();
+  for (const change of [
+    { path: "tokens.color.brand.primary", value: "blue" },
+    { path: "sample.headline", value: "" },
+    { path: "tokens.typography.display.family", value: "Papyrus" },
+    { path: "id", value: "hijack" },
+    { path: "decisions", value: [] },
+  ]) {
+    assert.equal(projectReducer(state, { type: "brand/edit", label: "x", changes: [change] }, NOW), state, JSON.stringify(change));
+  }
+});
+
+test("rapid edits with the same key merge into one undo step, but not after a pause", () => {
+  let state = selected();
+  const drag = (value: string, at: string) =>
+    projectReducer(state, { type: "brand/edit", label: "Primary colour", coalesceKey: "primary", changes: [{ path: "tokens.color.brand.primary", value }] }, at);
+  state = drag("#111111", later(0));
+  state = drag("#222222", later(200));
+  state = drag("#333333", later(400));
+  assert.equal(state.brand?.past.length, 1);
+  assert.equal(state.brand?.past[0].changes[0].from, "#083B66");
+  assert.equal(state.brand?.past[0].changes[0].to, "#333333");
+
+  state = drag("#444444", later(5000));
+  assert.equal(state.brand?.past.length, 2);
+
+  state = projectReducer(state, { type: "brand/undo" }, later(6000));
+  state = projectReducer(state, { type: "brand/undo" }, later(6001));
+  assert.equal(state.brand?.direction.tokens.color.brand.primary, "#083B66");
+});
+
+test("a new edit after undoing clears the redo stack", () => {
+  let state = selected();
+  state = projectReducer(state, { type: "brand/edit", label: "a", changes: [{ path: "strategy.promise", value: "One" }] }, later(0));
+  state = projectReducer(state, { type: "brand/undo" }, later(10));
+  state = projectReducer(state, { type: "brand/edit", label: "b", changes: [{ path: "strategy.promise", value: "Two" }] }, later(20));
+  assert.equal(state.brand?.future.length, 0);
+});
+
+test("reset returns to the source direction and can itself be undone", () => {
+  let state = selected();
+  state = projectReducer(state, { type: "brand/edit", label: "Radius", changes: [{ path: "tokens.radius.button", value: "pill" }] }, later(0));
+  state = projectReducer(state, { type: "brand/setPreviewMode", mode: "dark" }, later(5));
+  state = projectReducer(state, { type: "brand/reset" }, later(10));
+  assert.deepEqual(state.brand?.direction, DEMO_DIRECTIONS[0]);
+  assert.equal(state.brand?.previewMode, "light");
+  state = projectReducer(state, { type: "brand/undo" }, later(20));
+  assert.equal(state.brand?.direction.tokens.radius.button, "pill");
+});
+
+test("re-selecting the same direction keeps edits; choosing another starts afresh", () => {
+  let state = selected();
+  state = projectReducer(state, { type: "brand/edit", label: "Promise", changes: [{ path: "strategy.promise", value: "Kept" }] }, NOW);
+  state = projectReducer(state, { type: "direction/select", id: "littoral-intelligence" }, NOW);
+  assert.equal(state.brand?.direction.strategy.promise, "Kept");
+  state = projectReducer(state, { type: "direction/select", id: "shared-shore" }, NOW);
+  assert.equal(state.brand?.sourceId, "shared-shore");
+  assert.equal(state.brand?.past.length, 0);
+});
+
+test("the working copy is what later stages build on", () => {
+  let state = selected();
+  state = projectReducer(state, { type: "brand/edit", label: "Headline", changes: [{ path: "sample.headline", value: "Know your coast." }] }, NOW);
+  assert.equal(selectedDirection(state)?.sample.headline, "Know your coast.");
 });
 
 const withDirections = (): ProjectState => ({

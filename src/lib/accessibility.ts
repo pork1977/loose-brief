@@ -1,5 +1,5 @@
 import { hexToRgb, oklabToRgb, rgbToHex, rgbToOklab } from "./palette";
-import { getToken, withToken, type BrandTokens } from "./tokens";
+import { colorPath, getPath, setPath, type BrandTokens, type Mode } from "./tokens";
 
 /*
  * Contrast checks for a brand's tokens, using the WCAG 2 contrast formula.
@@ -29,7 +29,7 @@ export function contrastRatio(a: string, b: string): number {
 export type ContrastCheckDefinition = {
   id: string;
   label: string;
-  /** Token that gets adjusted if the check fails. */
+  /** Mode-neutral token path that gets adjusted if the check fails. */
   foreground: string;
   background: string;
   minimum: 4.5 | 3;
@@ -46,7 +46,11 @@ export const CONTRAST_CHECKS: ContrastCheckDefinition[] = [
   { id: "accent", label: "Accent colour for icons and chart lines", foreground: "color.brand.accent", background: "color.surface.card", minimum: 3, kind: "graphic" },
 ];
 
-export type ContrastResult = ContrastCheckDefinition & {
+export type ContrastResult = Omit<ContrastCheckDefinition, "foreground" | "background"> & {
+  mode: Mode;
+  /** Stored token paths for this mode, e.g. "colorDark.text.primary". */
+  foreground: string;
+  background: string;
   ratio: number;
   passes: boolean;
   foregroundHex: string;
@@ -55,14 +59,19 @@ export type ContrastResult = ContrastCheckDefinition & {
   suggestion: string | null;
 };
 
-export function runContrastChecks(tokens: BrandTokens): ContrastResult[] {
+export function runContrastChecks(tokens: BrandTokens, mode: Mode = tokens.mode): ContrastResult[] {
   return CONTRAST_CHECKS.map((check) => {
-    const fg = getToken(tokens, check.foreground) as string;
-    const bg = getToken(tokens, check.background) as string;
+    const foreground = colorPath(check.foreground, mode);
+    const background = colorPath(check.background, mode);
+    const fg = getPath(tokens, foreground) as string;
+    const bg = getPath(tokens, background) as string;
     const ratio = contrastRatio(fg, bg);
     const passes = ratio >= check.minimum;
     return {
       ...check,
+      mode,
+      foreground,
+      background,
       ratio,
       passes,
       foregroundHex: fg,
@@ -101,7 +110,7 @@ export function suggestContrastFix(foreground: string, background: string, minim
 
 export function applySuggestion(tokens: BrandTokens, result: ContrastResult): BrandTokens {
   if (!result.suggestion) return tokens;
-  return withToken(tokens, result.foreground, result.suggestion);
+  return setPath(tokens, result.foreground, result.suggestion);
 }
 
 export function formatRatio(ratio: number): string {

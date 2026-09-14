@@ -14,7 +14,9 @@ export function directionsAreStale(state: ProjectState): boolean {
   return state.directions !== null && state.directions.briefKey !== briefKey(state.brief);
 }
 
+/** The direction being built on: the edited working copy once there is one. */
 export function selectedDirection(state: ProjectState): Direction | null {
+  if (state.brand && state.brand.sourceId === state.selectedDirectionId) return state.brand.direction;
   return state.directions?.items.find((d) => d.id === state.selectedDirectionId) ?? null;
 }
 
