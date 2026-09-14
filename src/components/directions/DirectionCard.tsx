@@ -2,8 +2,7 @@
 
 import { useId, useState, ViewTransition } from "react";
 import { BrandScope } from "@/components/brand/BrandScope";
-import { isDemoDirection } from "@/data/demo-ids";
-import { CoastlineVisual } from "@/components/brand/CoastlineVisual";
+import { BrandIllustration } from "@/components/brand/BrandIllustration";
 import { MiniSite } from "@/components/brand/MiniSite";
 import { MotionPreview } from "@/components/brand/MotionPreview";
 import { ScaledPreview } from "@/components/brand/ScaledPreview";
@@ -98,7 +97,7 @@ export function DirectionCard({
           <section className={styles.block}>
             <h3 className={styles.blockTitle}>Imagery</h3>
             <div className={styles.imageThumb}>
-              <CoastlineVisual style={direction.visual} abstract={!isDemoDirection(direction.id)} />
+              <BrandIllustration direction={direction} />
             </div>
             <p className={styles.small}>{direction.imagery.style}</p>
           </section>

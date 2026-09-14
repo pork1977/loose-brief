@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState, ViewTransition } from "react";
 import { BrandScope } from "@/components/brand/BrandScope";
-import { isDemoDirection } from "@/data/demo-ids";
-import { CoastlineVisual } from "@/components/brand/CoastlineVisual";
+import { BrandIllustration } from "@/components/brand/BrandIllustration";
 import { MotionPreview } from "@/components/brand/MotionPreview";
 import { brandFont } from "@/lib/brand-fonts";
 import { AREA_LABELS, DESIGN_AREAS, type DesignArea, type Direction } from "@/lib/direction";
@@ -222,7 +221,7 @@ function AreaVisual({ area, direction }: { area: DesignArea; direction: Directio
     case "imagery":
       return (
         <span className={styles.image}>
-          <CoastlineVisual style={direction.visual} abstract={!isDemoDirection(direction.id)} />
+          <BrandIllustration direction={direction} />
         </span>
       );
     case "motion":

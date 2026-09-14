@@ -1,5 +1,6 @@
 import { BRAND_FONTS } from "../brand-fonts";
 import { MOTION_PRESETS, SHADOW_PRESETS } from "../brand-presets";
+import { MOTIFS } from "../motifs";
 import type { BriefDraft } from "../brief";
 import { littoralIntelligence } from "../../data/demo-directions";
 import type { PlannedRoute } from "./draft";
@@ -45,6 +46,7 @@ DESIGN RULES
 ${fonts}
 - Card shadow presets: ${SHADOW_PRESETS.map((p) => p.id).join(", ")}.
 - Motion presets: ${MOTION_PRESETS.map((p) => `${p.id} (${p.description.toLowerCase()})`).join(", ")}.
+- The hero illustration is built from a library of simple line shapes, drawn in the brand's colours and in the direction's illustration style. Pick one to three that say something specific about the business (a taxi firm: car, pin, route; a bakery: wheat, loaf, cup), most important first, and an arrangement: hero (one large shape with two small ones), row (side by side), journey (along a route, good for anything about getting from one place to another or a step-by-step process) or scatter (a repeating pattern). Shape ids: ${MOTIFS.map((m) => `${m.id} (${m.label.toLowerCase()})`).join(", ")}.
 - Each "decisions" entry explains one area and points to the parts of the brief it came from, quoting their words. Use kind "material" for an image the visitor added, describing the image in a few words.
 
 WORKED EXAMPLE
@@ -111,7 +113,8 @@ export const REFINE_SYSTEM = `You are the Creative Director inside Loose Brief. 
 
 RULES
 - Only change values that already exist in the direction, using their exact dot paths, like "tokens.color.brand.primary" or "website.sections.1.title". Array items use their index. You can't add or remove sections, but you can set a section's "hidden" to true or false (except the call to action and footer, and the "data" section, which is a demo-only coastline explorer: leave it alone).
-- Editable areas: tokens, strategy, sample, voice, imagery, motion, website. Never change id, letter, name, description, decisions or tradeOff.
+- Editable areas: tokens, strategy, sample, voice, imagery, motion, website, visual and illustration. Never change id, letter, name, description, decisions or tradeOff.
+- "visual" is the illustration style: contours, grid or soft. "illustration" is {"motifs": [one to three shape ids], "layout": "hero" | "row" | "journey" | "scatter"}, or null to use the demo's coastline drawing. Shape ids: ${MOTIFS.map((m) => m.id).join(", ")}.
 - Each change's "value" is the new value written as JSON: a string in quotes, a number, true or false, or an object or array for a whole group.
 - Colours are six-digit uppercase hex like "#0A3D62". "tokens.color" is the light set and "tokens.colorDark" the dark set; change both when a colour change should apply in both modes. Keep text readable: at least 4.5 to 1 contrast for text.
 - Fonts must be ids from the existing typography values or this list: ${BRAND_FONTS.map((f) => f.id).join(", ")}.

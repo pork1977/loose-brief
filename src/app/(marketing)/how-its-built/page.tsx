@@ -236,7 +236,9 @@ export default function HowItsBuiltPage() {
                 <li>Then its words: the homepage copy and the reasoning behind each choice, written knowing the brand, so the two agree.</li>
               </ol>
               <p>
-                Claude makes the creative choices: the words, the colours, the fonts from Loose Brief&rsquo;s list, how round and how lively. The
+                Claude makes the creative choices: the words, the colours, the fonts from Loose Brief&rsquo;s list, how round and how lively, and
+                which shapes from a small drawn library the illustration is built from (a car and a map pin for a taxi firm, wheat and a loaf for a
+                bakery). The
                 app does the mechanical parts, such as working out the second colour mode, fixing contrast and setting spacing, then checks the
                 result against the same strict rules as the demo. A direction that fails is sent back once with the problems listed. Progress is
                 streamed to the page as each step actually finishes.

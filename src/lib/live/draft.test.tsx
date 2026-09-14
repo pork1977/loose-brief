@@ -7,7 +7,7 @@ import { buildStaticSite } from "../export/site";
 import { runContrastChecks } from "../accessibility";
 import { directionSchema } from "../direction";
 import { sectionOf } from "../website";
-import { DraftError, assembleDirection, assignVisuals, fit, toDraft } from "./draft";
+import { DraftError, assembleDirection, assignVisuals, fit, illustrationFrom, toDraft } from "./draft";
 
 test("every built-in direction survives the round trip through a draft", () => {
   for (const demo of DEMO_DIRECTIONS) {
@@ -69,6 +69,13 @@ test("missing pieces the page can't do without are reported, not papered over", 
     assert.ok(error.problems.some((p) => p.startsWith("decisions")));
     return true;
   });
+});
+
+test("Claude's shape choices are kept to real library shapes, once each", () => {
+  assert.deepEqual(illustrationFrom({ motifs: ["Car", "pin", "car", "dragon", "route"], layout: "Journey" }), { motifs: ["car", "pin", "route"], layout: "journey" });
+  assert.deepEqual(illustrationFrom({ motifs: ["dragon"], layout: "sideways" }), { motifs: ["spark"], layout: "hero" });
+  const d = assembleDirection({ draft: { ...toDraft(DEMO_DIRECTIONS[0]), illustration: { motifs: ["wheat", "loaf"], layout: "row" } }, letter: "A", visual: "soft", brief: DEMO_BRIEF });
+  assert.deepEqual(d.illustration, { motifs: ["wheat", "loaf"], layout: "row" });
 });
 
 test("fit trims at a word boundary and never leaves trailing punctuation", () => {

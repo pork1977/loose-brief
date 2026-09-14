@@ -158,8 +158,8 @@ export const refineDraftSchema = z.object({
 
 /** The parts of a direction Claude may change, with website sections labelled by index. */
 function editableView(direction: Direction) {
-  const { visual, strategy, sample, voice, imagery, motion, tokens, website } = direction;
-  return { visual, strategy, sample, voice, imagery, motion, tokens, website };
+  const { visual, illustration, strategy, sample, voice, imagery, motion, tokens, website } = direction;
+  return { visual, illustration, strategy, sample, voice, imagery, motion, tokens, website };
 }
 
 function parseValue(raw: string): unknown {

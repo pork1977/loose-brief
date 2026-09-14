@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LAYOUTS, MOTIF_IDS } from "./motifs";
 import { brandTokensSchema } from "./tokens";
 import { websiteSchema } from "./website";
 
@@ -25,6 +26,16 @@ export const AREA_LABELS: Record<DesignArea, string> = {
 };
 
 const text = (max: number) => z.string().trim().min(1).max(max);
+
+export const illustrationSchema = z.object({
+  motifs: z
+    .array(z.enum(MOTIF_IDS))
+    .min(1)
+    .max(3)
+    .refine((ids) => new Set(ids).size === ids.length, "Each shape can only be used once."),
+  layout: z.enum(LAYOUTS),
+});
+export type Illustration = z.infer<typeof illustrationSchema>;
 
 /** Where in the brief a decision came from. */
 export const sourceSchema = z.object({
@@ -79,6 +90,13 @@ export const directionSchema = z.object({
   decisions: z.array(decisionSchema).min(DESIGN_AREAS.length).max(10),
   /** What this route gives up, stated plainly. */
   tradeOff: text(200),
+  /**
+   * Shapes from the motif library that the hero illustration is built from,
+   * and how they're arranged. Null for the Ebbfield demo, which keeps its
+   * coastline drawing. Missing in saves from before illustrations existed,
+   * so it defaults to null rather than failing the restore.
+   */
+  illustration: illustrationSchema.nullable().default(null),
   tokens: brandTokensSchema,
   /** Homepage sections below the hero, written in this direction's voice. */
   website: websiteSchema,

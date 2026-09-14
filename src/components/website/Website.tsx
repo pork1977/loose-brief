@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent, type ReactNode } from "react";
-import { CoastlineVisual } from "@/components/brand/CoastlineVisual";
+import { BrandIllustration } from "@/components/brand/BrandIllustration";
 import { isDemoDirection } from "@/data/demo-ids";
 import type { Direction } from "@/lib/direction";
 import { navTarget, type Section, type SectionOf } from "@/lib/website";
@@ -175,7 +175,7 @@ function Nav({ brandName, direction }: { brandName: string; direction: Direction
 /* ------------------------------------------------------------------- hero */
 
 function Hero({ direction }: { direction: Direction }) {
-  const { sample, visual, website } = direction;
+  const { sample, website } = direction;
   const id = useId();
   return (
     <section className={styles.hero} data-section="hero" aria-labelledby={id} data-tokens="--space-2xl --space-l">
@@ -199,14 +199,8 @@ function Hero({ direction }: { direction: Direction }) {
         </div>
       </div>
       <div className={styles.heroVisual} data-tokens="--color-surface --color-border --radius-card --shadow-card --color-brand-primary --color-brand-secondary --color-brand-accent">
-        {isDemoDirection(direction.id) ? (
-          <>
-            <CoastlineVisual style={visual} />
-            <span className={styles.caption}>Illustrative</span>
-          </>
-        ) : (
-          <CoastlineVisual style={visual} abstract />
-        )}
+        <BrandIllustration direction={direction} />
+        {isDemoDirection(direction.id) && !direction.illustration ? <span className={styles.caption}>Illustrative</span> : null}
       </div>
     </section>
   );

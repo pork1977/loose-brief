@@ -139,7 +139,7 @@ export type ProjectAction =
   | { type: "project/reset" };
 
 /** Parts of a direction the brand editor may change. Ids, letters and the original reasoning stay fixed. */
-const EDITABLE = /^(tokens|strategy|sample|voice|imagery|motion|website)(\.|$)|^visual$/;
+const EDITABLE = /^(tokens|strategy|sample|voice|imagery|motion|website|illustration)(\.|$)|^visual$/;
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 

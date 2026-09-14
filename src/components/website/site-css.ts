@@ -1225,6 +1225,59 @@ export const SITE_CSS = String.raw`
   stroke-width: 3;
 }
 
+/* Motif illustrations (generated brands). Line weight is set on each shape's group, scaled with the shape. */
+.wv-m-line,
+.wv-m-schematic,
+.wv-m-soft {
+  fill: var(--color-surface);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.wv-m-line {
+  stroke: var(--color-brand-primary);
+}
+.wv-m-schematic {
+  stroke: var(--color-text-primary);
+}
+.wv-m-soft {
+  stroke: var(--color-brand-primary);
+}
+.wv-m-ring {
+  fill: none;
+  stroke: var(--color-brand-secondary);
+  stroke-width: 1;
+}
+.wv-m-dot {
+  fill: var(--color-brand-accent);
+}
+.wv-m-route,
+.wv-m-route-dashed,
+.wv-m-route-soft {
+  fill: none;
+  stroke-linecap: round;
+}
+.wv-m-route {
+  stroke: var(--color-brand-secondary);
+  stroke-width: 1.5;
+}
+.wv-m-route-dashed {
+  stroke: var(--color-brand-accent);
+  stroke-width: 2;
+  stroke-dasharray: 2 6;
+}
+.wv-m-route-soft {
+  stroke: var(--color-brand-secondary);
+  stroke-width: 10;
+  opacity: 0.45;
+}
+.wv-m-blob {
+  fill: var(--color-brand-secondary);
+  opacity: 0.5;
+}
+.wv-m-float {
+  animation: wv-bob 4s var(--motion-easing, ease-in-out) infinite alternate;
+}
+
 @keyframes wv-tide {
   from {
     transform: translateX(4px);

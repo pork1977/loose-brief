@@ -2,12 +2,13 @@
 
 import { useId } from "react";
 import { BrandScope } from "@/components/brand/BrandScope";
-import { isDemoDirection } from "@/data/demo-ids";
-import { CoastlineVisual } from "@/components/brand/CoastlineVisual";
+import { BrandIllustration } from "@/components/brand/BrandIllustration";
 import { TagField } from "@/components/form/fields";
+import { isDemoDirection } from "@/data/demo-ids";
 import { VISUAL_STYLES, type Direction, type VisualStyle } from "@/lib/direction";
+import { LAYOUTS, LAYOUT_LABELS, MOTIFS, motif, type MotifId } from "@/lib/motifs";
 import type { Mode } from "@/lib/tokens";
-import { DraftField, EditorSection, brandEdit, useInspect } from "./controls";
+import { DraftField, EditorSection, Segmented, brandEdit, useInspect } from "./controls";
 import styles from "./tabs.module.css";
 
 const text = (label: string, path: string) => (value: string) => brandEdit(label, [{ path, value }], path);
@@ -65,6 +66,86 @@ const STYLE_LABELS: Record<VisualStyle, { label: string; description: string }> 
   soft: { label: "Soft shapes", description: "Rounded and warm" },
 };
 
+/*
+ * Which shapes the illustration is built from, and how they're arranged.
+ * Ebbfield starts with its own coastline drawing and can switch to shapes;
+ * anything else always uses shapes.
+ */
+function ShapesEditor({ direction }: { direction: Direction }) {
+  const { illustration } = direction;
+  const demo = isDemoDirection(direction.id);
+
+  if (!illustration) {
+    return (
+      <EditorSection
+        title="Shapes"
+        description={demo ? "The illustration is Ebbfield's coastline drawing, made for the demo." : "This brand was made before illustrations used shapes, so it still has the demo's abstract drawing."}
+      >
+        <div>
+          <button
+            type="button"
+            className="ui-button ui-button--small"
+            onClick={() =>
+              brandEdit("Build the illustration from shapes", [
+                { path: "illustration", value: demo ? { motifs: ["wave", "pin", "chart"], layout: "journey" } : { motifs: ["spark"], layout: "hero" } },
+              ])
+            }
+          >
+            Build it from shapes instead
+          </button>
+        </div>
+      </EditorSection>
+    );
+  }
+
+  const toggle = (id: MotifId, on: boolean) => {
+    const motifs = on ? [...illustration.motifs, id] : illustration.motifs.filter((m) => m !== id);
+    if (!motifs.length || motifs.length > 3) return;
+    brandEdit(`${on ? "Add" : "Remove"} ${motif(id).label.toLowerCase()} shape`, [{ path: "illustration.motifs", value: motifs }]);
+  };
+
+  return (
+    <EditorSection
+      title="Shapes"
+      description={`Pick up to three shapes that say something about the business. The first is the largest. ${illustration.motifs.length} of 3 chosen.`}
+      actions={
+        demo ? (
+          <button type="button" className="ui-button ui-button--ghost ui-button--small" onClick={() => brandEdit("Back to the coastline drawing", [{ path: "illustration", value: null }])}>
+            Use the coastline again
+          </button>
+        ) : undefined
+      }
+    >
+      <Segmented
+        label="Arrangement"
+        value={illustration.layout}
+        options={LAYOUTS.map((layout) => ({ value: layout, label: LAYOUT_LABELS[layout].label }))}
+        onChange={(layout) => brandEdit(`${LAYOUT_LABELS[layout].label} arrangement`, [{ path: "illustration.layout", value: layout }])}
+      />
+      <fieldset className={styles.motifGrid}>
+        <legend className="ui-label">Shapes</legend>
+        <div className="ui-toggles">
+          {MOTIFS.map((m) => {
+            const chosen = illustration.motifs.includes(m.id);
+            const locked = chosen ? illustration.motifs.length === 1 : illustration.motifs.length >= 3;
+            return (
+              <label key={m.id} className="ui-toggle" title={locked && !chosen ? "Remove a shape to add another" : undefined}>
+                <input type="checkbox" checked={chosen} disabled={locked} onChange={(e) => toggle(m.id, e.target.checked)} />
+                <svg viewBox="0 0 48 48" className={styles.motifIcon} aria-hidden="true">
+                  {m.paths.map((d, i) => (
+                    <path key={i} d={d} />
+                  ))}
+                </svg>
+                {m.label}
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+    </EditorSection>
+  );
+}
+
 export function ImageryTab({ direction, mode }: { direction: Direction; mode: Mode }) {
   const name = useId();
   const inspectProps = useInspect(["--color-brand-primary", "--color-brand-secondary", "--color-brand-accent"]);
@@ -84,7 +165,7 @@ export function ImageryTab({ direction, mode }: { direction: Direction; mode: Mo
                 onChange={() => brandEdit(`${STYLE_LABELS[style].label} illustrations`, [{ path: "visual", value: style }])}
               />
               <BrandScope tokens={direction.tokens} mode={mode} className={styles.styleThumb} aria-hidden="true">
-                <CoastlineVisual style={style} abstract={!isDemoDirection(direction.id)} />
+                <BrandIllustration direction={direction} style={style} />
               </BrandScope>
               <span className={styles.presetName}>{STYLE_LABELS[style].label}</span>
               <span className={styles.presetDescription}>{STYLE_LABELS[style].description}</span>
@@ -92,6 +173,8 @@ export function ImageryTab({ direction, mode }: { direction: Direction; mode: Mo
           ))}
         </fieldset>
       </EditorSection>
+
+      <ShapesEditor direction={direction} />
 
       <EditorSection title="Image direction" description="Guidance for anyone choosing or making imagery for the brand.">
         <DraftField label="Style" max={120} value={imagery.style} onCommit={text("Image style", "imagery.style")} />

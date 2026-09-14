@@ -3,7 +3,8 @@ import { BRAND_FONTS, brandFont, nearestWeight, type BrandFontId } from "../bran
 import { MOTION_PRESETS, SHADOW_PRESETS, radiusScale } from "../brand-presets";
 import type { BriefDraft } from "../brief";
 import { deriveColorSet, repairContrast } from "../color-modes";
-import { DESIGN_AREAS, VISUAL_STYLES, directionSchema, type Direction, type VisualStyle } from "../direction";
+import { DESIGN_AREAS, VISUAL_STYLES, directionSchema, type Direction, type Illustration, type VisualStyle } from "../direction";
+import { LAYOUTS, MOTIF_IDS, type MotifId } from "../motifs";
 import { RADIUS_STEPS, type ColorSet, type Mode } from "../tokens";
 import { SECTION_ORDER, type Website } from "../website";
 
@@ -102,6 +103,12 @@ export const directionDraftSchema = z.object({
     shadow: s(`Card shadow, one of: ${SHADOW_IDS.join(", ")}`),
   }),
   spacing: s("One of: compact, regular, airy"),
+  illustration: z
+    .object({
+      motifs: z.array(s("A shape id from the library")).describe("One to three different shapes that say something about this business, most important first"),
+      layout: s(`How they're arranged, one of: ${LAYOUTS.join(", ")}`),
+    })
+    .describe("The hero illustration, built from the shape library"),
   website: z.object({
     credibility: z.object({ label: s("Label for the strip, at most 60 characters"), items: z.array(s("At most 40 characters")).describe("Three to six") }),
     problem: z.object({
@@ -136,9 +143,22 @@ export type DirectionDraft = z.infer<typeof directionDraftSchema>;
  * then the words, which are given the brand so the reasoning explains the real
  * choices and the copy is in its voice.
  */
-export const BRAND_KEYS = ["name", "description", "strategy", "voice", "imagery", "motion", "tradeOff", "colours", "type", "shape", "spacing"] as const;
+export const BRAND_KEYS = ["name", "description", "strategy", "voice", "imagery", "motion", "tradeOff", "colours", "type", "shape", "spacing", "illustration"] as const;
 export const COPY_KEYS = ["sample", "decisions", "website"] as const;
-export const brandPartSchema = directionDraftSchema.pick({ name: true, description: true, strategy: true, voice: true, imagery: true, motion: true, tradeOff: true, colours: true, type: true, shape: true, spacing: true });
+export const brandPartSchema = directionDraftSchema.pick({
+  name: true,
+  description: true,
+  strategy: true,
+  voice: true,
+  imagery: true,
+  motion: true,
+  tradeOff: true,
+  colours: true,
+  type: true,
+  shape: true,
+  spacing: true,
+  illustration: true,
+});
 export const copyPartSchema = directionDraftSchema.pick({ sample: true, decisions: true, website: true });
 export type BrandPart = z.infer<typeof brandPartSchema>;
 export type CopyPart = z.infer<typeof copyPartSchema>;
@@ -323,6 +343,7 @@ export function assembleDirection({ draft, letter, visual, brief }: AssembleInpu
       sources: d.sources.slice(0, 4).map((src) => ({ kind: oneOf(src.kind, sourceKinds, "trait"), value: fit(src.value, 120) })),
     })),
     tradeOff: fit(draft.tradeOff, 200),
+    illustration: illustrationFrom(draft.illustration),
     tokens: {
       mode,
       color: mode === "light" ? lead : other,
@@ -361,6 +382,12 @@ export class DraftError extends Error {
   constructor(readonly problems: string[]) {
     super(`The direction didn't pass the checks: ${problems.join("; ")}`);
   }
+}
+
+/** Keep the shape ids that exist, once each. With none usable, a single spark still gives the hero something. */
+export function illustrationFrom(value: DirectionDraft["illustration"] | undefined): Illustration {
+  const motifs = [...new Set((value?.motifs ?? []).map((m) => m.trim().toLowerCase()).filter((m): m is MotifId => (MOTIF_IDS as string[]).includes(m)))].slice(0, 3);
+  return { motifs: motifs.length ? motifs : ["spark"], layout: oneOf(value?.layout ?? "", LAYOUTS, "hero") };
 }
 
 /** Pick the three illustration styles, one each, keeping the plan's choices where they don't clash. */
@@ -420,6 +447,8 @@ export function toDraft(d: Direction): DirectionDraft {
     },
     shape: { roundness: parseFloat(d.tokens.radius.medium), buttons: d.tokens.radius.button, cards: d.tokens.radius.card, shadow },
     spacing,
+    // Ebbfield keeps its coastline drawing, so the worked example shows the shapes it would pick instead.
+    illustration: d.illustration ?? { motifs: ["wave", "pin", "chart"], layout: "journey" },
     website: {
       credibility: { label: credibility.label, items: credibility.items },
       problem: { eyebrow: problem.eyebrow, title: problem.title, body: problem.body, points: problem.points },

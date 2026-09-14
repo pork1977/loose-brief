@@ -135,6 +135,7 @@ export const littoralIntelligence: Direction = {
     },
   ],
   tradeOff: "The quiet, editorial feel could seem slow to a planner who wants the numbers straight away.",
+  illustration: null,
   website: demoWebsite({
     problemTitle: "Coastal decisions are made with evidence that arrives too late.",
     problemBody: "Shorelines change every season, but the evidence behind adaptation plans is often years old, scattered and hard to compare. Good decisions need a clearer, shared picture.",
@@ -245,6 +246,7 @@ export const signalCoast: Direction = {
     },
   ],
   tradeOff: "Hopeful is the trait this route plays down most. It may feel cold to community groups.",
+  illustration: null,
   website: demoWebsite({
     problemTitle: "Annual surveys can't keep up with a coast that moves every tide.",
     problemBody: "Erosion accelerates between reviews. Data lives in six systems and three formats. By the time the report is signed off, the numbers have already moved.",
@@ -355,6 +357,7 @@ export const sharedShore: Direction = {
     },
   ],
   tradeOff: "Scientific comes through least. Research partners may find it too soft.",
+  illustration: null,
   website: demoWebsite({
     problemTitle: "Everyone can see the coast changing. Few people know what to do about it.",
     problemBody: "Residents, councils and researchers often look at different information and talk past each other. Ebbfield gives everyone the same clear picture, so plans get agreed sooner.",

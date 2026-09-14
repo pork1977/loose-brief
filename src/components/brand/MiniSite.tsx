@@ -1,6 +1,6 @@
 import type { Direction } from "@/lib/direction";
 import { isDemoDirection } from "@/data/demo-ids";
-import { CoastlineVisual } from "./CoastlineVisual";
+import { BrandIllustration } from "./BrandIllustration";
 import styles from "./MiniSite.module.css";
 
 /*
@@ -57,8 +57,8 @@ export function MiniSite({ brandName, direction }: { brandName: string; directio
           className={styles.visualCard}
           data-tokens="--color-surface --color-border --radius-card --shadow-card --color-brand-primary --color-brand-secondary --color-brand-accent"
         >
-          <CoastlineVisual style={visual} abstract={!isDemoDirection(direction.id)} />
-          {isDemoDirection(direction.id) ? (
+          <BrandIllustration direction={direction} />
+          {isDemoDirection(direction.id) && !direction.illustration ? (
             <span className={styles.visualCaption} aria-hidden="true">
               Illustrative
             </span>

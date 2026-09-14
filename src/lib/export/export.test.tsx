@@ -4,6 +4,8 @@ import { strFromU8, unzipSync } from "fflate";
 import { SITE_CSS } from "../../components/website/site-css";
 import { DEMO_BRIEF } from "../../data/demo-brief";
 import { DEMO_DIRECTIONS, littoralIntelligence } from "../../data/demo-directions";
+import { directionSchema } from "../direction";
+import { LAYOUTS, motif, type MotifId } from "../motifs";
 import { withToken } from "../tokens";
 import { everythingZip, siteFiles, siteZip, textExports } from "./bundle";
 import { googleFontsUrl } from "./fonts";
@@ -38,14 +40,34 @@ test("hidden sections are left out of the export, and so is the explorer data wh
 });
 
 test("every class the exported page uses is defined in its stylesheet", () => {
-  for (const direction of DEMO_DIRECTIONS) {
+  // The demo's coastline drawings, plus shape illustrations in every style and arrangement.
+  const withShapes = (["contours", "grid", "soft"] as const).flatMap((visual) =>
+    LAYOUTS.map((layout) => ({ ...littoralIntelligence, visual, illustration: { motifs: ["car", "pin", "route"] as MotifId[], layout } })),
+  );
+  for (const direction of [...DEMO_DIRECTIONS, ...withShapes]) {
     const { "index.html": html, "styles.css": css } = siteFiles(input(direction));
     const used = new Set([...html.matchAll(/class="([^"]+)"/g)].flatMap((m) => m[1].split(/\s+/)).filter((c) => /^w[svx]-/.test(c)));
     const missing = [...used].filter((c) => !css.includes(`.${c}`));
     // A few classes are hooks with no styling of their own.
     const unstyled = new Set(["ws-anchor", "ws-how", "ws-features"]);
-    assert.deepEqual(missing.filter((c) => !unstyled.has(c)), [], direction.name);
+    assert.deepEqual(missing.filter((c) => !unstyled.has(c)), [], `${direction.visual} ${direction.illustration?.layout ?? "coastline"}`);
   }
+});
+
+test("a shape illustration draws the chosen shapes, and only the demo's coastline has labels", () => {
+  const car = motif("car").paths[0];
+  for (const layout of LAYOUTS) {
+    const direction = { ...littoralIntelligence, illustration: { motifs: ["car", "pin"] as MotifId[], layout } };
+    const { "index.html": html } = siteFiles(input(direction));
+    const hero = /<div class="ws-hero-visual">[\s\S]*?<\/div>/.exec(html)?.[0] ?? "";
+    assert.ok(hero.includes(car), layout);
+    assert.doesNotMatch(hero, /<text|Illustrative/, layout);
+  }
+  assert.ok(directionSchema.safeParse({ ...littoralIntelligence, illustration: { motifs: ["car", "car"], layout: "hero" } }).success === false, "a shape can't repeat");
+  assert.ok(directionSchema.safeParse({ ...littoralIntelligence, illustration: { motifs: ["dragon"], layout: "hero" } }).success === false, "only library shapes");
+  const older: Partial<typeof littoralIntelligence> = { ...littoralIntelligence };
+  delete older.illustration;
+  assert.equal(directionSchema.parse(older).illustration, null, "saves from before illustrations still load");
 });
 
 test("the explorer data has a frame for every year, matching the slider", () => {
