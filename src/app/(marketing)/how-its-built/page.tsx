@@ -50,6 +50,7 @@ const CONTENTS = [
   ["history", "One project, one history"],
   ["website", "The website"],
   ["director", "The Creative Director"],
+  ["live", "Live mode"],
   ["exports", "Exports"],
   ["stack", "Stack and tests"],
   ["next", "What's next"],
@@ -86,24 +87,25 @@ export default function HowItsBuiltPage() {
             <Section id="real" title="What's real so far">
               <div className={styles.facts}>
                 <div className={styles.fact}>
-                  <h3>No AI model is used yet</h3>
+                  <h3>The demo uses no AI</h3>
                   <p>
-                    The three Ebbfield directions were written in advance. The Creative Director matches requests to twelve rules, also
-                    written in advance, and the personality reading on the brief uses fixed rules. The app says so wherever these appear.
+                    The three Ebbfield directions were written in advance, so the demo works without calling a model. The Creative
+                    Director&rsquo;s twelve suggestions are rules, and the personality reading on the brief uses fixed rules. The app says so
+                    wherever these appear.
                   </p>
                 </div>
                 <div className={styles.fact}>
-                  <h3>Everything else is working code</h3>
+                  <h3>Your own brief uses Claude</h3>
                   <p>
-                    The brand editor, the contrast checks, the homepage, undo and redo, and all the exports work on whatever the brand is at the
-                    moment, including every change you make to it.
+                    In live mode Claude writes three directions from your brief, and handles Creative Director requests the rules don&rsquo;t
+                    cover. What it sends back goes through the same checks as the demo data, and is labelled as made by Claude.
                   </p>
                 </div>
                 <div className={styles.fact}>
-                  <h3>Nothing is uploaded</h3>
+                  <h3>Nothing is stored on a server</h3>
                   <p>
-                    Your project is saved in your browser. Colours are read from images you add in the browser too, and the downloads are made
-                    there. There are no accounts and no server storage.
+                    Your project is saved in your browser, and the downloads are made there. In live mode your brief, and any image you choose
+                    to share, goes to Anthropic to get Claude&rsquo;s reply. Loose Brief doesn&rsquo;t keep a copy.
                   </p>
                 </div>
               </div>
@@ -220,8 +222,27 @@ export default function HowItsBuiltPage() {
               <p>This is the structured reply for &ldquo;Make it more premium&rdquo; on Littoral Intelligence, as the app produces it:</p>
               <Code label="Creative Director reply as JSON">{directorExample()}</Code>
               <p>
-                Live mode will keep this shape. A model will be asked for changes in this form, and they&rsquo;ll go through the same checks before
-                you see them.
+                In live mode, a request none of the rules match goes to Claude along with the brand as it is. Claude answers in this same shape,
+                naming each value to change, and the answer goes through the same checks before you see it. If a change names something that
+                doesn&rsquo;t exist or breaks a rule, Claude is told exactly which one and asked once more.
+              </p>
+            </Section>
+
+            <Section id="live" title="Live mode">
+              <p>Writing directions from your own brief takes four requests to Claude, made on the server:</p>
+              <ol className={styles.steps}>
+                <li>A plan for three routes, so they&rsquo;re clearly different from each other before any detail is written.</li>
+                <li>Then all three directions at once, each told what the other two are doing.</li>
+              </ol>
+              <p>
+                Claude makes the creative choices: the words, the colours, the fonts from Loose Brief&rsquo;s list, how round and how lively. The
+                app does the mechanical parts, such as working out the second colour mode, fixing contrast and setting spacing, then checks the
+                result against the same strict rules as the demo. A direction that fails is sent back once with the problems listed. Progress is
+                streamed to the page as each step actually finishes.
+              </p>
+              <p>
+                The instructions and your brief are the same at the start of every request, so they&rsquo;re cached and the later requests cost less.
+                Each visitor can run a few generations an hour, and there&rsquo;s a daily ceiling, with a spending limit on the API key as the backstop.
               </p>
             </Section>
 
@@ -245,17 +266,18 @@ export default function HowItsBuiltPage() {
                 </li>
                 <li>Zod for the schemas that brands, briefs and saved projects have to pass.</li>
                 <li>fflate to make the zip files in the browser.</li>
+                <li>The Anthropic SDK for Claude, used only on the server, with Claude Opus 5 by default.</li>
                 <li>
                   Unit tests with Node&rsquo;s built-in test runner, covering the project history and upgrades, tokens, contrast, the Creative
-                  Director&rsquo;s rules and the exports.
+                  Director&rsquo;s rules, the exports, and the live generation steps run against a stand-in for Claude.
                 </li>
               </ul>
             </Section>
 
             <Section id="next" title="What's next">
               <p>
-                Live mode: directions made from your own brief by Claude, running on the server with a spending cap, and optional analysis of the
-                images and documents you add to a brief. Until then the demo shows the whole journey with Ebbfield, a made-up company.
+                Letting Claude read more of what people already have: PDFs such as existing brand guidelines, and copy pasted from an old
+                website. Then making the site easier to find in search engines and AI assistants.
               </p>
               <div className={styles.cta}>
                 <TryDemoButton className="ui-button ui-button--primary" />

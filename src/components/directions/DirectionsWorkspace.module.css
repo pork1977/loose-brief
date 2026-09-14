@@ -36,6 +36,21 @@
 .editLink {
   font-size: var(--ui-text-s);
 }
+button.editLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ui-color-text-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.regenerate {
+  padding: var(--ui-space-m);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-panel);
+}
 
 .canvasSection {
   display: flex;

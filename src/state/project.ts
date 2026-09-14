@@ -14,8 +14,10 @@ import { MODES, getPath, setPath, type Mode } from "@/lib/tokens";
 export const PROJECT_VERSION = 5;
 
 const directionsStateSchema = z.object({
-  /** "demo" for the built-in Ebbfield set, "live" once generation exists. */
+  /** "demo" for the built-in Ebbfield set, "live" for a set Claude generated. */
   source: z.enum(["demo", "live"]),
+  /** The model that wrote a live set. */
+  model: z.string().max(60).optional(),
   /** briefKey() of the brief these were made from. */
   briefKey: z.string(),
   createdAt: z.string(),

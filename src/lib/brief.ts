@@ -58,6 +58,8 @@ export const materialSchema = z.object({
     temperature: z.enum(["warm", "cool", "neutral"]),
   }),
   addedAt: z.string(),
+  /** The visitor agreed to send this image to Claude when generating directions. Off unless they tick it. */
+  shareWithClaude: z.boolean().default(false),
 });
 export type Material = z.infer<typeof materialSchema>;
 

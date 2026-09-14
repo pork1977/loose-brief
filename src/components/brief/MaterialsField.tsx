@@ -3,6 +3,8 @@
 import { useId, useRef, useState } from "react";
 import { LIMITS, MATERIAL_KINDS, type Material, type MaterialKind } from "@/lib/brief";
 import { ACCEPTED_TYPES, IntakeError, readMaterial } from "@/lib/image-intake";
+import { useLiveStatus } from "@/lib/live/client";
+import { MAX_IMAGES } from "@/lib/live/protocol";
 import { saveMaterialFile } from "@/lib/material-files";
 import { forgetThumbnail, rememberThumbnail, useThumbnail } from "@/lib/material-thumbnails";
 import { dispatch } from "@/state/project-store";
@@ -31,6 +33,8 @@ export function MaterialsField({ materials }: { materials: Material[] }) {
   const [pending, setPending] = useState<Pending[]>([]);
   const [dragging, setDragging] = useState(false);
 
+  const live = useLiveStatus();
+  const shared = materials.filter((m) => m.shareWithClaude).length;
   const reading = pending.filter((p) => p.status === "reading").length;
   const room = LIMITS.materials - materials.length - reading;
 
@@ -69,7 +73,8 @@ export function MaterialsField({ materials }: { materials: Material[] }) {
       </span>
       <p id={hintId} className="ui-hint">
         A logo, photos, textures, or screenshots of things you like. Their colours are read straight away and shape
-        the directions. Files stay in this browser. Nothing is uploaded.
+        the directions. Files stay in this browser
+        {live ? ", unless you tick “Let Claude look at this” on one, in which case it's sent with your brief when directions are generated." : ". Nothing is uploaded."}
       </p>
 
       <div
@@ -139,7 +144,7 @@ export function MaterialsField({ materials }: { materials: Material[] }) {
       {materials.length ? (
         <ul className={styles.list}>
           {materials.map((material) => (
-            <MaterialCard key={material.id} material={material} />
+            <MaterialCard key={material.id} material={material} live={live === true} sharingFull={shared >= MAX_IMAGES} />
           ))}
         </ul>
       ) : null}
@@ -147,7 +152,7 @@ export function MaterialsField({ materials }: { materials: Material[] }) {
   );
 }
 
-function MaterialCard({ material }: { material: Material }) {
+function MaterialCard({ material, live, sharingFull }: { material: Material; live: boolean; sharingFull: boolean }) {
   const id = useId();
   const thumbnail = useThumbnail(material.id);
   const update = (patch: Partial<Omit<Material, "id">>) => dispatch({ type: "material/update", id: material.id, patch });
@@ -242,6 +247,25 @@ function MaterialCard({ material }: { material: Material }) {
               </label>
             </div>
           </fieldset>
+
+          {live ? (
+            <div>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={material.shareWithClaude}
+                  disabled={!material.shareWithClaude && sharingFull}
+                  onChange={(e) => update({ shareWithClaude: e.target.checked })}
+                />
+                Let Claude look at this
+              </label>
+              <p className="ui-hint">
+                {!material.shareWithClaude && sharingFull
+                  ? `You can share ${MAX_IMAGES} images at most.`
+                  : "Sent to Anthropic with your brief when you generate directions, so Claude can use its mood, shapes and style. Only its colours are used otherwise."}
+              </p>
+            </div>
+          ) : null}
 
           {material.kind === "logo" ? (
             <label className={styles.checkbox}>

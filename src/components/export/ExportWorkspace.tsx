@@ -121,6 +121,12 @@ function Workspace() {
         </div>
       ) : null}
 
+      {!demo && project.state.directions?.source === "live" ? (
+        <p className="ui-notice" role="note">
+          Claude wrote this homepage&rsquo;s words. The customer types, figures and quote are examples, so check every line and swap in real ones before you publish.
+        </p>
+      ) : null}
+
       {demo ? (
         <p className="ui-notice" role="note">
           Ebbfield is a made-up company, so its figures, partners and quote are illustrative. If you use this as a starting point, replace them with real ones before publishing.

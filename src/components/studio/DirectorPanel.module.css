@@ -95,6 +95,27 @@
   font-size: var(--ui-text-xs);
   color: var(--ui-color-text-secondary);
 }
+.thinking {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  color: var(--ui-color-text-secondary);
+}
+.spinner {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-top: 0.2rem;
+  border: 2px solid var(--ui-color-accent);
+  border-top-color: transparent;
+  border-radius: 999px;
+  animation: director-spin 800ms linear infinite;
+}
+@keyframes director-spin {
+  to {
+    rotate: 360deg;
+  }
+}
 .summary {
   font-weight: 600;
 }

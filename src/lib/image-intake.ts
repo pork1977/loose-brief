@@ -129,6 +129,7 @@ export async function readMaterial(file: File): Promise<{ material: Material; th
       exactColours,
       traits: describePalette(palette),
       addedAt: new Date().toISOString(),
+      shareWithClaude: false,
     };
     return { material, thumbnail };
   } finally {

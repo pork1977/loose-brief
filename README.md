@@ -15,6 +15,8 @@ Then open http://localhost:3400.
 
 Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`, `npm test`.
 
+Live mode (Claude writing directions from your own brief) needs `ANTHROPIC_API_KEY` in `.env.local`. See `.env.example` for that and the optional limits. Without a key the Ebbfield demo works as normal. `LIVE_FAKE=1` in `.env.development.local` replays the demo through the live screens without calling the API.
+
 ## Where things live
 
 | Path | What's in it |
@@ -33,6 +35,8 @@ Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`, `npm test`.
 | `src/lib/health.ts` | The identity health checks |
 | `src/lib/exporters.ts` | CSS variables, W3C design token JSON and the Tailwind v4 theme |
 | `src/lib/export` | The downloads: static site, site.js, documents, social cards and zips |
+| `src/lib/live` | Live mode: the draft shape Claude fills in, prompts, the generation steps, limits and the SDK call |
+| `src/app/api` | The live routes: `live` (is it on), `directions` and `refine` |
 | `src/components/export` | The Export page |
 | `src/components/website/site-css.ts` | The homepage stylesheet, shared by the Studio preview and the downloaded site |
 | `src/lib/coastline.ts` | The illustrative coastline data and the frame for any year |

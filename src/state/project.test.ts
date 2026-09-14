@@ -56,6 +56,7 @@ test("materials can be added once, updated and removed", () => {
     exactColours: ["#083B66"],
     traits: { lightness: "dark" as const, saturation: "balanced" as const, temperature: "cool" as const },
     addedAt: NOW,
+    shareWithClaude: false,
   };
   let state = projectReducer(INITIAL_PROJECT, { type: "material/add", material }, NOW);
   state = projectReducer(state, { type: "material/add", material }, NOW);
@@ -64,6 +65,14 @@ test("materials can be added once, updated and removed", () => {
   assert.equal(state.brief.materials[0].alt, "Ebbfield logo");
   state = projectReducer(state, { type: "material/remove", id: "m1" }, NOW);
   assert.equal(state.brief.materials.length, 0);
+
+  // Saves from before live mode have no sharing choice; they restore with sharing off.
+  const { shareWithClaude, ...older } = material;
+  assert.equal(shareWithClaude, false);
+  const saved = { ...INITIAL_PROJECT, updatedAt: NOW, brief: { ...INITIAL_PROJECT.brief, materials: [older] } };
+  const restored = restoreProject(JSON.stringify(saved));
+  assert.equal(restored.problem, "none");
+  assert.equal(restored.state.brief.materials[0].shareWithClaude, false);
 });
 
 test("restoring a good save gives it back", () => {

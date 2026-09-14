@@ -4,7 +4,8 @@ import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import type { BriefDraft } from "@/lib/brief";
 import type { Direction } from "@/lib/direction";
 import { CHANGE_TYPE_LABELS, commandById, diffRows, proposalJson, type ChangeType } from "@/lib/refinement";
-import { askDirector, changesToApply, SUGGESTIONS } from "@/state/director";
+import { askClaude, useLiveStatus } from "@/lib/live/client";
+import { askDirector, changesToApply, claudeMessage, CLAUDE, SUGGESTIONS } from "@/state/director";
 import { applyBrandChanges, type BrandState, type DirectorMessage } from "@/state/project";
 import { dispatch } from "@/state/project-store";
 import styles from "./DirectorPanel.module.css";
@@ -21,8 +22,11 @@ type Props = {
 
 export function DirectorPanel({ brand, brief, previewing, onPreviewChange, onReply, onShow }: Props) {
   const [draft, setDraft] = useState("");
+  const [thinking, setThinking] = useState<string | null>(null);
   const logRef = useRef<HTMLOListElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const inputId = useId();
+  const live = useLiveStatus() === true;
   const messages = brand.director;
   const count = messages.length;
 
@@ -30,16 +34,38 @@ export function DirectorPanel({ brand, brief, previewing, onPreviewChange, onRep
   useEffect(() => {
     const log = logRef.current;
     if (log) log.scrollTo({ top: log.scrollHeight, behavior: "smooth" });
-  }, [count]);
+  }, [count, thinking]);
 
-  const ask = (text: string) => {
-    const request = text.trim();
-    if (!request) return;
-    const message = askDirector(request, { direction: brand.direction, brief });
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  const show = (message: DirectorMessage) => {
     dispatch({ type: "director/ask", message });
-    setDraft("");
     onPreviewChange(true);
     onReply(message);
+  };
+
+  const ask = async (text: string) => {
+    const request = text.trim();
+    if (!request || thinking) return;
+    const message = askDirector(request, { direction: brand.direction, brief });
+    setDraft("");
+    // The built-in rules go first. Anything they can't match goes to Claude when live mode is on.
+    if (message.reply.kind !== "unknown" || !live) {
+      show(message);
+      return;
+    }
+    const abort = new AbortController();
+    abortRef.current = abort;
+    setThinking(request);
+    try {
+      const { name, oneLiner, description, audience, personality, avoid } = brief;
+      const response = await askClaude({ request, direction: brand.direction, brief: { name, oneLiner, description, audience, personality, avoid } }, abort.signal);
+      show(claudeMessage(request, response));
+    } catch {
+      // Aborted because the panel went away; nothing to show.
+    } finally {
+      if (!abort.signal.aborted) setThinking(null);
+    }
   };
 
   const submit = (e: FormEvent) => {
@@ -54,7 +80,7 @@ export function DirectorPanel({ brand, brief, previewing, onPreviewChange, onRep
           <h2 id={`${inputId}-title`} className={styles.title}>
             Creative Director
           </h2>
-          <p className={styles.subtitle}>Built-in rules, not AI yet</p>
+          <p className={styles.subtitle}>{live ? "Built-in rules, and Claude for anything else" : "Built-in rules, not AI"}</p>
         </div>
         {count ? (
           <button type="button" className="ui-button ui-button--ghost ui-button--small" onClick={() => dispatch({ type: "director/clear" })}>
@@ -70,8 +96,23 @@ export function DirectorPanel({ brand, brief, previewing, onPreviewChange, onRep
               Ask for a change in plain words, like &ldquo;make it feel more premium&rdquo;. I&rsquo;ll tell you exactly what I&rsquo;d change and show it on the page before anything is saved.
             </p>
             <p className={styles.note}>
-              In this version requests are matched to rules written in advance, so wording close to the suggestions below works best. Free-text requests handled by an AI model come later.
+              {live
+                ? "The suggestions below are rules written in advance. Anything they don't cover is sent to Claude, along with this brand, and its reply is checked before you see it."
+                : "Requests are matched to rules written in advance, so wording close to the suggestions below works best. Live mode, where Claude handles anything else, isn't switched on here."}
             </p>
+          </li>
+        ) : null}
+        {thinking ? (
+          <li className={styles.exchange} aria-busy="true">
+            <p className={styles.request}>
+              <span className="visually-hidden">You asked: </span>
+              {thinking}
+            </p>
+            <div className={styles.reply} data-status="pending">
+              <p className={styles.thinking}>
+                <span className={styles.spinner} aria-hidden="true" /> None of the built-in rules fit, so Claude is working on it. This takes a few seconds.
+              </p>
+            </div>
           </li>
         ) : null}
         {messages.map((message, i) => (
@@ -92,12 +133,12 @@ export function DirectorPanel({ brand, brief, previewing, onPreviewChange, onRep
       <div className={styles.composer}>
         <div className={styles.suggestions} role="group" aria-label="Suggestions">
           {SUGGESTIONS.map((s) => (
-            <button key={s} type="button" className={styles.suggestion} onClick={() => ask(s)}>
+            <button key={s} type="button" className={styles.suggestion} onClick={() => ask(s)} disabled={thinking !== null}>
               {s}
             </button>
           ))}
         </div>
-        <form className={styles.form} onSubmit={submit}>
+        <form className={styles.form} onSubmit={submit} aria-busy={thinking !== null}>
           <label htmlFor={inputId} className="visually-hidden">
             Ask the Creative Director for a change
           </label>
@@ -116,7 +157,7 @@ export function DirectorPanel({ brand, brief, previewing, onPreviewChange, onRep
               }
             }}
           />
-          <button type="submit" className="ui-button ui-button--primary ui-button--small" disabled={!draft.trim()}>
+          <button type="submit" className="ui-button ui-button--primary ui-button--small" disabled={!draft.trim() || thinking !== null}>
             Send
           </button>
         </form>
@@ -169,6 +210,7 @@ function MessageView({ message, brand, brief, latest, previewing, onPreviewChang
 
         {reply.kind === "noop" ? (
           <>
+            {reply.commandId === CLAUDE ? <p className={styles.rule}>From Claude</p> : null}
             <p>{reply.text}</p>
             {reply.focus ? (
               <button type="button" className="ui-button ui-button--small" onClick={() => onShow(reply.focus as string)}>
@@ -182,7 +224,7 @@ function MessageView({ message, brand, brief, latest, previewing, onPreviewChang
           <>
             <div className={styles.replyHead}>
               <span className="ui-chip">{CHANGE_TYPE_LABELS[reply.changeType as ChangeType] ?? reply.changeType}</span>
-              <span className={styles.rule}>Rule: {commandById(reply.commandId)?.label}</span>
+              <span className={styles.rule}>{reply.commandId === CLAUDE ? "From Claude" : `Rule: ${commandById(reply.commandId)?.label}`}</span>
             </div>
             <p className={styles.summary}>{reply.summary}</p>
             <p className={styles.updateLabel}>{message.status === "applied" ? "I updated:" : "I'll update:"}</p>
@@ -234,7 +276,7 @@ function MessageView({ message, brand, brief, latest, previewing, onPreviewChang
                         dispatch({ type: "director/cancel", messageId: message.id });
                         return;
                       }
-                      dispatch({ type: "director/apply", messageId: message.id, label: `Creative Director: ${commandById(reply.commandId)?.label ?? "change"}`, changes });
+                      dispatch({ type: "director/apply", messageId: message.id, label: reply.commandId === CLAUDE ? `Claude: ${reply.summary.slice(0, 100)}` : `Creative Director: ${commandById(reply.commandId)?.label ?? "change"}`, changes });
                     }}
                   >
                     Apply changes

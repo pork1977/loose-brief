@@ -1,6 +1,7 @@
 import type { BriefDraft } from "@/lib/brief";
 import type { Direction } from "@/lib/direction";
 import { COMMANDS, areaFor, commandById, matchRequest, proposalJson, proposalSchema } from "@/lib/refinement";
+import type { RefineResponse } from "@/lib/live/protocol";
 import { applyBrandChanges, type BrandChange, type DirectorMessage } from "./project";
 
 /*
@@ -11,6 +12,32 @@ import { applyBrandChanges, type BrandChange, type DirectorMessage } from "./pro
 
 const SUGGESTIONS = COMMANDS.map((c) => c.label);
 export { SUGGESTIONS };
+
+/** The commandId on replies that came from Claude rather than a built-in rule. */
+export const CLAUDE = "claude";
+
+/** Turn a reply from the live refine route into a Creative Director message. */
+export function claudeMessage(request: string, response: RefineResponse, now = new Date().toISOString()): DirectorMessage {
+  const base = { id: `${now}-${Math.random().toString(36).slice(2, 8)}`, at: now, request: request.trim().slice(0, 300), editId: null };
+  if (!response.ok) return { ...base, status: "reply", reply: { kind: "unknown", text: response.message.slice(0, 400) } };
+  if (!response.possible) return { ...base, status: "reply", reply: { kind: "noop", commandId: CLAUDE, text: response.text.slice(0, 400), focus: null } };
+  return {
+    ...base,
+    status: "pending",
+    reply: {
+      kind: "proposal",
+      commandId: CLAUDE,
+      changeType: response.changeType,
+      summary: response.summary,
+      because: response.because,
+      affected: response.affected.slice(0, 20),
+      changes: response.changes,
+      match: 1,
+      focus: response.focus,
+      viewport: null,
+    },
+  };
+}
 
 export function askDirector(request: string, ctx: { direction: Direction; brief: BriefDraft }, now = new Date().toISOString()): DirectorMessage {
   const base = { id: `${now}-${Math.random().toString(36).slice(2, 8)}`, at: now, request: request.trim().slice(0, 300), editId: null };
@@ -84,6 +111,8 @@ export function askDirector(request: string, ctx: { direction: Direction; brief:
 /** The changes to apply for a pending proposal, re-planned against the brand as it is at the moment of applying. */
 export function changesToApply(message: DirectorMessage, ctx: { direction: Direction; brief: BriefDraft }): BrandChange[] | null {
   if (message.reply.kind !== "proposal") return null;
+  // Claude's changes can't be re-planned by a rule, so they're applied as written, and still checked by applyBrandChanges.
+  if (message.reply.commandId === CLAUDE) return message.reply.changes.map((c) => ({ path: c.path, value: c.to }));
   const command = commandById(message.reply.commandId);
   if (!command) return null;
   const plan = command.plan(ctx);
