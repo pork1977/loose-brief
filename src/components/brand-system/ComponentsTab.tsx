@@ -1,8 +1,9 @@
 "use client";
 
+import { useState, useSyncExternalStore } from "react";
 import { BrandScope } from "@/components/brand/BrandScope";
 import { MotionPreview } from "@/components/brand/MotionPreview";
-import { MOTION_PRESETS, SHADOW_PRESETS } from "@/lib/brand-presets";
+import { MOTION_PRESETS, ROUNDNESS_MAX, SHADOW_PRESETS, radiusScale } from "@/lib/brand-presets";
 import type { Direction } from "@/lib/direction";
 import { RADIUS_STEPS, colorsFor, spaceScale, SPACE_STEPS, type Mode, type RadiusStep } from "@/lib/tokens";
 import { DraftField, EditorSection, Segmented, SliderField, brandEdit, useInspect } from "./controls";
@@ -26,20 +27,28 @@ export function ComponentsTab({ direction, mode }: { direction: Direction; mode:
         </BrandScope>
       </EditorSection>
 
-      <EditorSection title="Corners" description="A three-step radius scale. Buttons and cards each pick a step.">
-        <div className={styles.sliderGrid}>
+      <EditorSection
+        title="Corners"
+        description="One roundness setting for the whole brand. It makes three sizes of corner in proportion: small for inputs, tags and icons, and medium or large for whichever buttons and cards pick."
+      >
+        <SliderField
+          label="Roundness"
+          value={Math.min(ROUNDNESS_MAX, px(t.radius.medium))}
+          min={0}
+          max={ROUNDNESS_MAX}
+          step={1}
+          format={(v) => {
+            const s = radiusScale(v);
+            return `Small ${s.small} · Medium ${s.medium} · Large ${s.large}`;
+          }}
+          inspect={["--radius-small", "--radius-button", "--radius-card"]}
+          onChange={(v) => brandEdit("Roundness", [{ path: "tokens.radius", value: { ...t.radius, ...radiusScale(v) } }], "roundness")}
+        />
+        <div className={styles.cornerSamples} aria-hidden="true">
           {(["small", "medium", "large"] as const).map((step) => (
-            <SliderField
-              key={step}
-              label={`${STEP_LABELS[step]} radius`}
-              value={px(t.radius[step])}
-              min={0}
-              max={step === "large" ? 40 : 24}
-              step={1}
-              format={(v) => `${v}px`}
-              inspect={[`--radius-${step}`, "--radius-button", "--radius-card"]}
-              onChange={(v) => brandEdit(`${STEP_LABELS[step]} radius`, [{ path: `tokens.radius.${step}`, value: `${v}px` }], `radius-${step}`)}
-            />
+            <span key={step} className={styles.cornerSample} style={{ borderRadius: t.radius[step] }}>
+              {STEP_LABELS[step]}
+            </span>
           ))}
         </div>
         <div className={styles.controlRow}>
@@ -113,7 +122,10 @@ export function ComponentsTab({ direction, mode }: { direction: Direction; mode:
         </div>
       </EditorSection>
 
-      <EditorSection title="Motion" description="How fast things move and how they settle.">
+      <EditorSection title="Motion" description="How fast things move and how they settle. The demo replays each time you pick a style.">
+        <BrandScope tokens={t} mode={mode} className={styles.motionStage}>
+          <MotionDemo motion={t.motion} />
+        </BrandScope>
         <div className={styles.presetGrid}>
           {MOTION_PRESETS.map((preset) => (
             <button
@@ -140,6 +152,64 @@ export function ComponentsTab({ direction, mode }: { direction: Direction; mode:
           onCommit={(v) => brandEdit("Motion principle", [{ path: "motion.principle", value: v }], "motion.principle")}
         />
       </EditorSection>
+    </div>
+  );
+}
+
+const EASING_NAMES: Record<string, string> = {
+  "cubic-bezier(0.22, 1, 0.36, 1)": "gentle ease out",
+  "cubic-bezier(0.2, 0, 0, 1)": "sharp ease out",
+  "cubic-bezier(0.34, 1.56, 0.64, 1)": "springy overshoot",
+  "ease-in-out": "even ease in and out",
+};
+
+/*
+ * Motion only shows when something moves, and a still preview never does. This
+ * plays a short sequence using the current motion tokens: a card arriving at
+ * the slow speed, rows following at the normal speed, a switch and a button at
+ * the fast speed. It replays whenever the tokens change, or on request.
+ */
+function MotionDemo({ motion }: { motion: Direction["tokens"]["motion"] }) {
+  const [runs, setRuns] = useState(0);
+  const reduced = useSyncExternalStore(
+    (onChange) => {
+      const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+      media.addEventListener("change", onChange);
+      return () => media.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false,
+  );
+
+  return (
+    <div className={styles.motionDemo}>
+      <div key={`${JSON.stringify(motion)}-${runs}`} className={styles.motionScene} aria-hidden="true">
+        <div className={styles.mCard}>
+          <span className={styles.mTitle}>New site flagged</span>
+          {[0, 1, 2].map((i) => (
+            <span key={i} className={styles.mRow} style={{ animationDelay: `calc(var(--motion-slow) * 0.5 + var(--motion-fast) * ${i})` }} />
+          ))}
+          <span className={styles.mFooter}>
+            <span className={styles.mSwitch}>
+              <span />
+            </span>
+            <span className={styles.mButton}>View</span>
+          </span>
+        </div>
+      </div>
+      <div className={styles.motionMeta}>
+        <p className={styles.motionTimings}>
+          Fast {motion.fast} · Normal {motion.normal} · Slow {motion.slow} · {EASING_NAMES[motion.easing] ?? "custom easing"}
+        </p>
+        <button type="button" className="ui-button ui-button--small" onClick={() => setRuns((r) => r + 1)}>
+          Replay
+        </button>
+      </div>
+      {reduced ? (
+        <p className="ui-notice" role="note">
+          Your device is set to reduce motion, so Loose Brief switches animations off, this demo included. The motion settings still apply to your exported site for visitors who haven&rsquo;t turned that on.
+        </p>
+      ) : null}
     </div>
   );
 }

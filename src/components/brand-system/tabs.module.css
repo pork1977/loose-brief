@@ -621,3 +621,144 @@
   line-height: 1.6;
   overflow: auto;
 }
+
+/* ---- Corners ---- */
+
+.cornerSamples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2xs);
+}
+.cornerSample {
+  display: grid;
+  place-items: center;
+  width: 5.5rem;
+  height: 3.25rem;
+  border: 2px solid var(--ui-color-text-primary);
+  background: var(--ui-color-surface-raised);
+  font-size: var(--ui-text-xs);
+  transition: border-radius var(--ui-motion-fast) var(--ui-ease);
+}
+
+/* ---- Motion demo (brand tokens inside) ---- */
+
+.motionStage {
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-card);
+  overflow: hidden;
+}
+.motionDemo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  padding: var(--space-m);
+}
+.motionScene {
+  display: grid;
+  place-items: center;
+  min-height: 12rem;
+}
+.mCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: min(100%, 17rem);
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  animation: m-arrive var(--motion-slow) var(--motion-easing) both;
+}
+.mTitle {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 1.125rem;
+  color: var(--color-text-primary);
+}
+.mRow {
+  display: block;
+  height: 0.5rem;
+  border-radius: var(--radius-small);
+  background: var(--color-border);
+  transform-origin: left;
+  animation: m-grow var(--motion-normal) var(--motion-easing) both;
+}
+.mRow:nth-of-type(2) {
+  width: 80%;
+}
+.mRow:nth-of-type(3) {
+  width: 60%;
+}
+.mFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}
+.mSwitch {
+  position: relative;
+  width: 2.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: var(--color-border);
+  animation: m-switch-track var(--motion-fast) var(--motion-easing) calc(var(--motion-slow) + var(--motion-normal)) both;
+}
+.mSwitch span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.25rem - 4px);
+  height: calc(1.25rem - 4px);
+  border-radius: 999px;
+  background: var(--color-surface);
+  animation: m-switch var(--motion-fast) var(--motion-easing) calc(var(--motion-slow) + var(--motion-normal)) both;
+}
+.mButton {
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-button);
+  background: var(--color-button-primary);
+  color: var(--color-button-primary-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  animation: m-press var(--motion-fast) var(--motion-easing) calc(var(--motion-slow) + var(--motion-normal) + var(--motion-fast) * 2) both;
+}
+.motionMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+.motionTimings {
+  font-family: var(--ui-font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+@keyframes m-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+  }
+}
+@keyframes m-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes m-switch {
+  to {
+    transform: translateX(1rem);
+  }
+}
+@keyframes m-switch-track {
+  to {
+    background: var(--color-button-primary);
+  }
+}
+@keyframes m-press {
+  50% {
+    transform: scale(0.9);
+  }
+}

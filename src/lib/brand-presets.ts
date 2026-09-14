@@ -62,6 +62,19 @@ export const TYPE_PRESETS: { id: string; label: string; description: string; typ
   },
 ];
 
+/*
+ * Corner roundness. The token model keeps a three-step scale (small parts like
+ * inputs and tags want tighter corners than large cards), but editing three
+ * sliders separately was confusing, because a step only shows if something
+ * uses it. One roundness value sets all three in proportion instead.
+ */
+export const ROUNDNESS_MAX = 24;
+
+export function radiusScale(medium: number): Pick<BrandTokens["radius"], "small" | "medium" | "large"> {
+  const m = Math.max(0, Math.min(ROUNDNESS_MAX, Math.round(medium)));
+  return { small: `${Math.round(m / 2)}px`, medium: `${m}px`, large: `${m * 2}px` };
+}
+
 /** Change one role's face, keeping its weight as close as the new face allows. */
 export function withFamily(typography: Typography, role: keyof Typography, family: BrandFontId): Typography {
   return { ...typography, [role]: { ...typography[role], family, weight: nearestWeight(family, typography[role].weight) } };
