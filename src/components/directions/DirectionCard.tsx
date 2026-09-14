@@ -138,11 +138,17 @@ export function DirectionCard({
       <footer className={styles.actions}>
         <button
           type="button"
-          className={`ui-button ${selected ? "" : "ui-button--primary"}`}
+          className={`ui-button ${selected ? "ui-button--primary" : ""}`}
           onClick={onSelect}
           aria-pressed={selected}
         >
-          {selected ? "Selected" : "Select direction"}
+          {selected ? (
+            <>
+              <TickIcon /> Selected
+            </>
+          ) : (
+            "Select direction"
+          )}
         </button>
         <label className="ui-toggle" data-disabled={compareDisabled && !comparing}>
           <input type="checkbox" checked={comparing} disabled={compareDisabled && !comparing} onChange={onToggleCompare} />
@@ -150,5 +156,14 @@ export function DirectionCard({
         </label>
       </footer>
     </article>
+  );
+}
+
+/** Filled red with a tick means chosen, matching the other toggles, where filled means on. */
+export function TickIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+      <path d="M3.5 8.5l3 3 6-7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }

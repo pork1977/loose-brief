@@ -70,15 +70,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className={styles.section} aria-labelledby="demo-title">
+      <section className={styles.section} aria-labelledby="closing-title">
         <div className={`ui-container ${styles.closing}`}>
           <div>
-            <h2 id="demo-title" className={styles.closingTitle}>
-              About the demo
+            <h2 id="closing-title" className={styles.closingTitle}>
+              Got a business idea?
             </h2>
             <p className={styles.sectionLead}>
-              Ebbfield isn&rsquo;t a real company. Its brief, its three directions and its website are built into
-              Loose Brief, so the demo works every time and doesn&rsquo;t depend on an AI model being available.
+              Write a short brief and see three directions for it. Or load the demo brief and have a look around first.
             </p>
           </div>
           <ButtonLink href="/brief" variant="primary" size="large" transitionTypes={["nav-forward"]}>

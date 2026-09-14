@@ -51,6 +51,15 @@
   display: none;
 }
 
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ui-space-s);
+  margin-top: var(--ui-space-m);
+  padding-top: var(--ui-space-m);
+  border-top: 1px solid var(--ui-color-border);
+}
+
 .columns {
   display: grid;
   gap: var(--ui-space-l);

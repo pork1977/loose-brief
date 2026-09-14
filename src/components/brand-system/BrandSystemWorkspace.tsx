@@ -154,6 +154,9 @@ function Workspace() {
                 Reset
               </button>
             </div>
+            <ButtonLink href="/studio" variant="primary" size="small" transitionTypes={["nav-forward"]}>
+              Continue to studio <span aria-hidden="true">&rarr;</span>
+            </ButtonLink>
           </div>
         </header>
 
@@ -230,6 +233,15 @@ function Workspace() {
             <p className={styles.previewNote}>Figures and the coastline drawing are illustrative.</p>
           </aside>
         </div>
+
+        <nav className={styles.pager} aria-label="Stage navigation">
+          <ButtonLink href="/directions" variant="ghost" transitionTypes={["nav-back"]}>
+            <span aria-hidden="true">&larr;</span> Directions
+          </ButtonLink>
+          <ButtonLink href="/studio" variant="primary" transitionTypes={["nav-forward"]}>
+            Continue to studio <span aria-hidden="true">&rarr;</span>
+          </ButtonLink>
+        </nav>
       </div>
     </InspectContext.Provider>
   );

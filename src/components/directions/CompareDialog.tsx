@@ -8,6 +8,7 @@ import { MotionPreview } from "@/components/brand/MotionPreview";
 import { ScaledPreview } from "@/components/brand/ScaledPreview";
 import { runContrastChecks } from "@/lib/accessibility";
 import type { Direction } from "@/lib/direction";
+import { TickIcon } from "./DirectionCard";
 import { HeadlineSample, Palette, TypeSpecimen } from "./DirectionParts";
 import styles from "./CompareDialog.module.css";
 
@@ -78,11 +79,17 @@ export function CompareDialog({ open, brandName, directions, selectedId, onSelec
                   </span>
                   <button
                     type="button"
-                    className={`ui-button ui-button--small ${selectedId === d.id ? "" : "ui-button--primary"}`}
+                    className={`ui-button ui-button--small ${selectedId === d.id ? "ui-button--primary" : ""}`}
                     aria-pressed={selectedId === d.id}
                     onClick={() => onSelect(d.id)}
                   >
-                    {selectedId === d.id ? "Selected" : "Select"}
+                    {selectedId === d.id ? (
+                      <>
+                        <TickIcon /> Selected
+                      </>
+                    ) : (
+                      "Select"
+                    )}
                   </button>
                 </div>
               ))}
