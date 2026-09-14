@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { startTransition, useCallback, useState } from "react";
 import { ButtonLink } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { DEMO_BRIEF, isDemoBrief } from "@/data/demo-brief";
+import { StageSkeleton } from "@/components/studio/StageSkeleton";
+import { isDemoBrief, type DEMO_BRIEF } from "@/data/demo-brief";
 import { DEMO_DIRECTIONS } from "@/data/demo-directions";
 import { briefKey } from "@/lib/brief";
 import { directionSetSchema, type Direction } from "@/lib/direction";
 import { colorsFor } from "@/lib/tokens";
-import { clearMaterialFiles } from "@/lib/material-files";
-import { forgetAllThumbnails } from "@/lib/material-thumbnails";
+import { startDemo } from "@/state/project-actions";
 import { directionsAreStale, isBriefDone, selectedDirection } from "@/state/progress";
 import { dispatch, useProject } from "@/state/project-store";
 import { CompareDialog } from "./CompareDialog";
@@ -43,13 +43,7 @@ export function DirectionsWorkspace() {
     if (project) storeDemoDirections(project.state.brief);
   }, [project]);
 
-  if (!project) {
-    return (
-      <p className="visually-hidden" role="status">
-        Loading your project
-      </p>
-    );
-  }
+  if (!project) return <StageSkeleton label="Loading your directions" />;
 
   const { state } = project;
   const brandName = state.brief.name.trim();
@@ -91,12 +85,9 @@ export function DirectionsWorkspace() {
           body="Your answers and any files you've added will be replaced by the Ebbfield demo brief."
           confirmLabel="Load the demo"
           onCancel={() => setConfirmDemo(false)}
-          onConfirm={async () => {
+          onConfirm={() => {
             setConfirmDemo(false);
-            forgetAllThumbnails();
-            await clearMaterialFiles();
-            dispatch({ type: "brief/loadDemo", brief: DEMO_BRIEF });
-            dispatch({ type: "brief/submit" });
+            void startDemo();
           }}
         />
       </>

@@ -1,0 +1,4 @@
+.notice {
+  max-width: 88rem;
+  margin: 0 auto var(--ui-space-m);
+}

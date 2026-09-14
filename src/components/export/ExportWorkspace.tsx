@@ -50,6 +50,7 @@ function Workspace() {
   const brandName = brief?.name.trim() ?? "";
   const direction = brand?.direction;
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const canvases = useRef<Partial<Record<SocialFormat, HTMLCanvasElement | null>>>({});
 
   const input = useMemo(() => (direction && brief ? { brandName, direction, brief } : null), [brandName, direction, brief]);
@@ -70,6 +71,7 @@ function Workspace() {
 
   const downloadEverything = async () => {
     setBusy(true);
+    setError(null);
     try {
       const images: Record<string, Uint8Array> = {};
       for (const format of Object.keys(SOCIAL_FORMATS) as SocialFormat[]) {
@@ -77,8 +79,19 @@ function Workspace() {
         if (canvas) images[SOCIAL_FORMATS[format].file] = await canvasToPng(canvas);
       }
       download({ name: file("brand-kit.zip"), data: everythingZip(input, images), type: "application/zip" });
+    } catch {
+      setError("The zip couldn't be made. Try again, or download the files one at a time below.");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const downloadSite = () => {
+    try {
+      setError(null);
+      download({ name: file("website.zip"), data: siteZip(input), type: "application/zip" });
+    } catch {
+      setError("The website zip couldn't be made. Try again, or refresh the page.");
     }
   };
 
@@ -98,6 +111,15 @@ function Workspace() {
           </button>
         </div>
       </header>
+
+      {error ? (
+        <div className="ui-notice ui-notice--error" role="alert">
+          <p>{error}</p>
+          <button type="button" className="ui-button ui-button--ghost ui-button--small" onClick={() => setError(null)}>
+            OK
+          </button>
+        </div>
+      ) : null}
 
       {demo ? (
         <p className="ui-notice" role="note">
@@ -122,7 +144,7 @@ function Workspace() {
               opens in any browser, and the whole folder can go on any web host. It&rsquo;s the same page the Studio shows.
             </p>
             <div className={styles.actions}>
-              <button type="button" className="ui-button ui-button--primary ui-button--small" onClick={() => download({ name: file("website.zip"), data: siteZip(input), type: "application/zip" })}>
+              <button type="button" className="ui-button ui-button--primary ui-button--small" onClick={downloadSite}>
                 Download website (.zip)
               </button>
               <button type="button" className="ui-button ui-button--small" onClick={() => openInTab(standaloneSite())}>
@@ -235,7 +257,7 @@ function Workspace() {
 }
 
 function DownloadButton({ name, data, type, copy = false }: { name: string; data: string; type: string; copy?: boolean }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"idle" | "copied" | "failed">("idle");
   return (
     <>
       <button type="button" className="ui-button ui-button--small" onClick={() => download({ name, data, type })}>
@@ -248,14 +270,15 @@ function DownloadButton({ name, data, type, copy = false }: { name: string; data
           onClick={async () => {
             try {
               await navigator.clipboard.writeText(data);
-              setCopied(true);
-              window.setTimeout(() => setCopied(false), 1600);
+              setCopied("copied");
             } catch {
-              setCopied(false);
+              // Clipboard access can be blocked by the browser; downloading still works.
+              setCopied("failed");
             }
+            window.setTimeout(() => setCopied("idle"), 2000);
           }}
         >
-          <span aria-live="polite">{copied ? "Copied" : "Copy"}</span>
+          <span aria-live="polite">{copied === "copied" ? "Copied" : copied === "failed" ? "Couldn't copy, try Download" : "Copy"}</span>
         </button>
       ) : null}
     </>

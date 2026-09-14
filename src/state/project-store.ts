@@ -126,6 +126,11 @@ export function dismissRestoreNotice() {
   emit();
 }
 
+/** The project as it is right now, for event handlers that shouldn't subscribe to it. */
+export function getProjectState(): ProjectState {
+  return getSnapshot().state;
+}
+
 /** The whole project, or null while it's still being read on first render. */
 export function useProject(): ProjectSnapshot | null {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);

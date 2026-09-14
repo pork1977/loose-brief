@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { STAGES, stageIndex } from "@/lib/stages";
 import { stageStatuses } from "@/state/progress";
 import { useProject } from "@/state/project-store";
+import { ProjectMenu } from "./ProjectMenu";
 import styles from "./StudioBar.module.css";
 
 /*
@@ -19,6 +21,16 @@ export function StudioBar() {
   const current = stageIndex(pathname);
   const project = useProject();
   const statuses = project ? stageStatuses(project.state) : null;
+  const stepsRef = useRef<HTMLElement>(null);
+
+  // On narrow screens the stages scroll sideways, so bring the current one into view.
+  useEffect(() => {
+    const nav = stepsRef.current;
+    const item = nav?.querySelectorAll("li")[current];
+    if (!nav || !item || nav.scrollWidth <= nav.clientWidth) return;
+    const offset = item.getBoundingClientRect().left - nav.getBoundingClientRect().left;
+    nav.scrollTo({ left: nav.scrollLeft + offset - (nav.clientWidth - item.offsetWidth) / 2, behavior: "instant" });
+  }, [current]);
 
   return (
     <header className={styles.bar} style={{ viewTransitionName: "studio-bar" }}>
@@ -26,7 +38,7 @@ export function StudioBar() {
         <Wordmark />
       </div>
 
-      <nav className={styles.steps} aria-label="Project stages">
+      <nav ref={stepsRef} className={styles.steps} aria-label="Project stages">
         <ol>
           {STAGES.map((stage, i) => {
             const status = statuses?.[stage.id] ?? "available";
@@ -76,6 +88,7 @@ export function StudioBar() {
       </nav>
 
       <div className={styles.tools}>
+        <ProjectMenu />
         <ThemeToggle />
       </div>
     </header>

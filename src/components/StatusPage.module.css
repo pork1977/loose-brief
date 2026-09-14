@@ -1,0 +1,27 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ui-space-s);
+  max-width: 36rem;
+  margin: var(--ui-space-2xl) auto;
+  padding-inline: var(--ui-gutter);
+}
+
+.title {
+  font-size: var(--ui-text-2xl);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2xs);
+  color: var(--ui-color-text-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2xs);
+  margin-top: var(--ui-space-2xs);
+}

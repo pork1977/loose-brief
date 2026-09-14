@@ -8,7 +8,8 @@ import { BRIEF_STEPS, EMPTY_BRIEF, firstInvalidStep, isStepValid, validateStep, 
 import { clearMaterialFiles, pruneMaterialFiles } from "@/lib/material-files";
 import { forgetAllThumbnails } from "@/lib/material-thumbnails";
 import type { ProjectAction } from "@/state/project";
-import { dismissRestoreNotice, dispatch, useProject } from "@/state/project-store";
+import { startOver } from "@/state/project-actions";
+import { dispatch, useProject } from "@/state/project-store";
 import { AudienceStep, ContextStep, GoalsStep, PersonalityStep, VisualStep, type StepProps } from "./BriefSteps";
 import { BriefSummary } from "./BriefSummary";
 import styles from "./BriefWorkspace.module.css";
@@ -49,13 +50,14 @@ export function BriefWorkspace() {
 
   if (!project) return <WorkspaceSkeleton />;
 
-  const { state, saveStatus, restoreFailed } = project;
+  const { state, saveStatus } = project;
   const { brief, furthestStep } = state;
   const step = BRIEF_STEPS[stepIndex];
   const StepComponent = STEP_COMPONENTS[stepIndex];
   const errors = attempted.has(stepIndex) ? validateStep(stepIndex, brief) : {};
   const isLast = stepIndex === BRIEF_STEPS.length - 1;
   const hasContent = JSON.stringify(brief) !== JSON.stringify(EMPTY_BRIEF);
+  const complete = firstInvalidStep(brief) === -1;
 
   // TypeScript can't narrow a generic field/value pair into the action union, hence the cast.
   const set = <K extends BriefField>(field: K, value: BriefDraft[K]) =>
@@ -82,6 +84,10 @@ export function BriefWorkspace() {
       dispatch({ type: "brief/goToStep", step: stepIndex + 1 });
       return;
     }
+    submitBrief();
+  };
+
+  function submitBrief() {
     const invalid = firstInvalidStep(brief);
     if (invalid !== -1) {
       markAttempted(invalid);
@@ -90,16 +96,18 @@ export function BriefWorkspace() {
     }
     dispatch({ type: "brief/submit" });
     router.push("/directions", { transitionTypes: ["nav-forward"] });
-  };
+  }
 
   const applyConfirm = async () => {
     const action = confirm;
     setConfirm(null);
     setAttempted(new Set());
-    forgetAllThumbnails();
-    await clearMaterialFiles();
-    if (action === "demo") dispatch({ type: "brief/loadDemo", brief: DEMO_BRIEF });
-    if (action === "reset") dispatch({ type: "project/reset" });
+    if (action === "demo") {
+      forgetAllThumbnails();
+      await clearMaterialFiles();
+      dispatch({ type: "brief/loadDemo", brief: DEMO_BRIEF });
+    }
+    if (action === "reset") await startOver();
   };
 
   return (
@@ -131,15 +139,6 @@ export function BriefWorkspace() {
           </button>
         </div>
       </header>
-
-      {restoreFailed ? (
-        <div className="ui-notice ui-notice--error" role="status">
-          <p>Your saved brief couldn&rsquo;t be read, so this is a fresh one.</p>
-          <button type="button" className="ui-button ui-button--ghost ui-button--small" onClick={dismissRestoreNotice}>
-            OK
-          </button>
-        </div>
-      ) : null}
 
       <div className={styles.columns}>
         <div className={styles.main}>
@@ -216,9 +215,22 @@ export function BriefWorkspace() {
               ) : (
                 <span />
               )}
-              <button type="submit" className="ui-button ui-button--primary ui-button--large">
-                {isLast ? "Generate directions" : "Next"} <span aria-hidden="true">&rarr;</span>
-              </button>
+              {isLast || !complete ? (
+                <button type="submit" className="ui-button ui-button--primary ui-button--large">
+                  {isLast ? "Generate directions" : "Next"} <span aria-hidden="true">&rarr;</span>
+                </button>
+              ) : (
+                // Every step is already answered (the demo, or a brief being revisited), so
+                // don't make people click through the rest to get to directions.
+                <div className={styles.formNavEnd}>
+                  <button type="submit" className="ui-button ui-button--ghost ui-button--large">
+                    Next
+                  </button>
+                  <button type="button" className="ui-button ui-button--primary ui-button--large" onClick={submitBrief}>
+                    Generate directions <span aria-hidden="true">&rarr;</span>
+                  </button>
+                </div>
+              )}
             </div>
           </form>
         </div>

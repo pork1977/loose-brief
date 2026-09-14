@@ -1,5 +1,6 @@
 import { DirectionShowcase } from "@/components/landing/DirectionShowcase";
 import { TokenRipple } from "@/components/landing/TokenRipple";
+import { TryDemoButton } from "@/components/landing/TryDemoButton";
 import { PageTransition } from "@/components/PageTransition";
 import { ButtonLink } from "@/components/ui/Button";
 import { STAGES } from "@/lib/stages";
@@ -21,13 +22,11 @@ export default function LandingPage() {
               <ButtonLink href="/brief" variant="primary" size="large" transitionTypes={["nav-forward"]}>
                 Start a project
               </ButtonLink>
-              <ButtonLink href="#how-it-works" size="large" variant="ghost">
-                See how it works
-              </ButtonLink>
+              <TryDemoButton className="ui-button ui-button--large" />
             </div>
             <p className={styles.demoNote}>
               The preview shows <strong>Ebbfield</strong>, a made-up coastal data company that Loose Brief uses as
-              its demo brand.
+              its demo brand. Try the demo to go straight to its three directions.
             </p>
           </div>
           <DirectionShowcase />
@@ -77,12 +76,15 @@ export default function LandingPage() {
               Got a business idea?
             </h2>
             <p className={styles.sectionLead}>
-              Write a short brief and see three directions for it. Or load the demo brief and have a look around first.
+              Write a short brief and see three directions for it. Or try the demo and have a look around first.
             </p>
           </div>
-          <ButtonLink href="/brief" variant="primary" size="large" transitionTypes={["nav-forward"]}>
-            Start a project
-          </ButtonLink>
+          <div className={styles.heroActions}>
+            <ButtonLink href="/brief" variant="primary" size="large" transitionTypes={["nav-forward"]}>
+              Start a project
+            </ButtonLink>
+            <TryDemoButton className="ui-button ui-button--large" />
+          </div>
         </div>
       </section>
     </PageTransition>

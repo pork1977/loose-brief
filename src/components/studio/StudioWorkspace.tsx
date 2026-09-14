@@ -25,10 +25,11 @@ export function StudioWorkspace() {
 
 function Workspace() {
   const project = useProject();
-  const [viewport, setViewport] = useState<Viewport>("desktop");
+  // This only renders in the browser (the project loads client-side), so window is available.
+  // On a phone a desktop-width frame is too small to read, so start with the mobile one.
+  const [viewport, setViewport] = useState<Viewport>(() => (window.matchMedia("(max-width: 47.99rem)").matches ? "mobile" : "desktop"));
   const [compare, setCompare] = useState(false);
   // The section list starts open beside the site on wide screens, and closed above it on narrow ones.
-  // This only renders in the browser (the project loads client-side), so window is available.
   const [railOpen, setRailOpen] = useState(() => window.matchMedia("(min-width: 90rem)").matches);
   const [previewing, setPreviewing] = useState(true);
   const canvases = useRef<{ before: CanvasApi | null; after: CanvasApi | null }>({ before: null, after: null });
@@ -132,6 +133,10 @@ function Workspace() {
               Redo
             </button>
           </div>
+          {/* Below the two-column layout the panel sits under a tall preview, so offer a way down to it. */}
+          <a href="#creative-director" className={`ui-button ui-button--small ${styles.directorJump}`}>
+            Creative Director <span aria-hidden="true">&darr;</span>
+          </a>
           <ButtonLink href="/export" variant="primary" size="small" transitionTypes={["nav-forward"]}>
             Continue to export <span aria-hidden="true">&rarr;</span>
           </ButtonLink>
@@ -190,7 +195,7 @@ function Workspace() {
           </div>
         </div>
 
-        <div className={styles.directorWrap}>
+        <div id="creative-director" className={styles.directorWrap}>
           <DirectorPanel
             brand={brand}
             brief={project.state.brief}

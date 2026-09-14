@@ -134,7 +134,7 @@
   justify-content: space-between;
   gap: var(--ui-space-l);
 }
-.closing > div {
+.closing > div:first-child {
   display: flex;
   flex-direction: column;
   gap: var(--ui-space-s);

@@ -138,6 +138,12 @@
 
 .directorWrap {
   min-width: 0;
+  scroll-margin-top: 7rem;
+}
+@media (min-width: 64rem) {
+  .directorJump {
+    display: none;
+  }
 }
 .directorWrap > section {
   height: 34rem;

@@ -8,6 +8,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import type { Stage } from "@/lib/stages";
 import { selectedDirection, stageStatuses } from "@/state/progress";
 import { useProject } from "@/state/project-store";
+import { StageSkeleton } from "./StageSkeleton";
 import styles from "./StageGate.module.css";
 
 /*
@@ -20,13 +21,7 @@ import styles from "./StageGate.module.css";
 export function StageGate({ stageId, showSelection = true, children }: { stageId: Stage["id"]; showSelection?: boolean; children: ReactNode }) {
   const project = useProject();
 
-  if (!project) {
-    return (
-      <p className="visually-hidden" role="status">
-        Loading your project
-      </p>
-    );
-  }
+  if (!project) return <StageSkeleton label="Loading your project" />;
 
   const status = stageStatuses(project.state)[stageId];
   const direction = selectedDirection(project.state);

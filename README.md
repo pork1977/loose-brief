@@ -44,6 +44,8 @@ Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`, `npm test`.
 | `src/lib/refinement.ts` | The Creative Director's built-in rules: matching requests and planning changes |
 | `src/state/director.ts` | Turning a request into a validated, previewable proposal |
 | `src/state` | Project state: a pure reducer, and a store that saves it in the browser and restores it safely |
+| `src/state/project-actions.ts` | Restarting the demo and starting over, shared by every screen that offers them |
+| `src/components/studio/ProjectMenu.tsx`, `DemoTour.tsx` | The Project menu and the demo tour shown on each stage |
 | `src/data/demo-brief.ts` | The Ebbfield demo brief |
 | `src/data/demo-directions.ts` | The three built-in directions for Ebbfield, the fictional demo brand |
 | `src/components/brand` | Components that only read brand tokens |

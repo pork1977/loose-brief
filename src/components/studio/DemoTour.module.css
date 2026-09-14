@@ -1,0 +1,54 @@
+.tour {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ui-space-xs) var(--ui-space-m);
+  max-width: 88rem;
+  margin: 0 auto var(--ui-space-l);
+  padding: var(--ui-space-s) var(--ui-space-m);
+  border: 1px solid var(--ui-color-border);
+  border-left: 3px solid var(--ui-color-accent);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-color-surface);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 24rem;
+}
+
+.eyebrow {
+  font-family: var(--ui-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-color-text-secondary);
+}
+
+.title {
+  font-weight: 600;
+}
+
+.tries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0;
+  list-style: none;
+  font-size: var(--ui-text-s);
+  color: var(--ui-color-text-secondary);
+}
+.tries li {
+  position: relative;
+  padding-left: 1.1rem;
+}
+.tries li::before {
+  content: "\2192";
+  position: absolute;
+  left: 0;
+  color: var(--ui-color-accent);
+}
