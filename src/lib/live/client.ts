@@ -57,15 +57,15 @@ function blobToBase64(blob: Blob): Promise<string> {
 
 /** Scale a stored image down for sending. Keeps PNG (and transparency) when it's small enough, else JPEG on white. */
 async function shrink(blob: Blob): Promise<{ mediaType: "image/png" | "image/jpeg"; data: string } | null> {
-  const url = URL.createObjectURL(blob);
+  let img: ImageBitmap | null = null;
   try {
-    const img = new Image();
-    img.src = url;
-    await img.decode();
-    const scale = Math.min(1, SEND_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+    // createImageBitmap rather than <img>.decode(): decode() waits for the page to be visible, so a
+    // visitor who switched tabs straight after pressing Generate would be stuck until they came back.
+    img = await createImageBitmap(blob);
+    const scale = Math.min(1, SEND_MAX / Math.max(img.width, img.height));
     const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
-    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     const encode = (type: string, quality?: number) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality));
@@ -88,7 +88,7 @@ async function shrink(blob: Blob): Promise<{ mediaType: "image/png" | "image/jpe
   } catch {
     return null;
   } finally {
-    URL.revokeObjectURL(url);
+    img?.close();
   }
 }
 

@@ -229,10 +229,11 @@ export default function HowItsBuiltPage() {
             </Section>
 
             <Section id="live" title="Live mode">
-              <p>Writing directions from your own brief takes four requests to Claude, made on the server:</p>
+              <p>Writing directions from your own brief takes seven requests to Claude, made on the server, and about a minute:</p>
               <ol className={styles.steps}>
                 <li>A plan for three routes, so they&rsquo;re clearly different from each other before any detail is written.</li>
-                <li>Then all three directions at once, each told what the other two are doing.</li>
+                <li>For each direction, the brand itself: strategy, voice, colours, type, shape and movement.</li>
+                <li>Then its words: the homepage copy and the reasoning behind each choice, written knowing the brand, so the two agree.</li>
               </ol>
               <p>
                 Claude makes the creative choices: the words, the colours, the fonts from Loose Brief&rsquo;s list, how round and how lively. The
@@ -241,7 +242,8 @@ export default function HowItsBuiltPage() {
                 streamed to the page as each step actually finishes.
               </p>
               <p>
-                The instructions and your brief are the same at the start of every request, so they&rsquo;re cached and the later requests cost less.
+                The instructions and your brief are the same at the start of every request, so they&rsquo;re cached: the first direction goes slightly
+                ahead so the other two can reuse what it stored instead of paying to store it again.
                 Each visitor can run a few generations an hour, and there&rsquo;s a daily ceiling, with a spending limit on the API key as the backstop.
               </p>
             </Section>

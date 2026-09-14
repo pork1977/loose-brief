@@ -24,9 +24,13 @@ async function decode(file: File): Promise<{ source: CanvasImageSource; width: n
   // SVGs go through an <img>, which never runs scripts inside the file.
   const url = URL.createObjectURL(file);
   const img = new Image();
-  img.src = url;
   try {
-    await img.decode();
+    // The load event, not img.decode(): decode() doesn't settle while the tab is in the background.
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("load failed"));
+      img.src = url;
+    });
   } catch {
     URL.revokeObjectURL(url);
     throw new IntakeError("That SVG couldn't be read.");
