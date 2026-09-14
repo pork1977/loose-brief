@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { brandTokensSchema } from "./tokens";
+import { websiteSchema } from "./website";
 
 /*
  * A brand direction: one complete route a brand could take.
@@ -79,6 +80,8 @@ export const directionSchema = z.object({
   /** What this route gives up, stated plainly. */
   tradeOff: text(200),
   tokens: brandTokensSchema,
+  /** Homepage sections below the hero, written in this direction's voice. */
+  website: websiteSchema,
 });
 
 export type Direction = z.infer<typeof directionSchema>;

@@ -40,7 +40,7 @@ export function VoiceTab({ direction }: { direction: Direction }) {
         />
       </EditorSection>
 
-      <EditorSection title="Homepage copy" description="The hero on the site preview. Every word can be changed.">
+      <EditorSection title="Homepage copy" description="The hero and navigation. Every other section of the homepage can be edited in the Studio.">
         <DraftField label="Eyebrow" max={60} value={sample.eyebrow} onCommit={text("Eyebrow", "sample.eyebrow")} inspect={["--font-label"]} />
         <DraftField label="Headline" max={90} value={sample.headline} onCommit={text("Headline", "sample.headline")} inspect={["--font-display"]} />
         <DraftField label="Supporting line" multiline max={220} value={sample.body} onCommit={text("Supporting line", "sample.body")} inspect={["--font-body"]} />

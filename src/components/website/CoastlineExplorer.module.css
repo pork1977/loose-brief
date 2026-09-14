@@ -1,0 +1,329 @@
+/* Brand tokens only. */
+
+.explorer {
+  display: grid;
+  gap: var(--space-m);
+  min-width: 0;
+}
+
+.mapWrap {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+.sea {
+  fill: var(--color-surface);
+}
+.gridLine {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+.contour {
+  fill: none;
+  stroke: var(--color-brand-primary);
+  stroke-width: 1.2;
+  transition: d var(--motion-normal) var(--motion-easing);
+}
+.land {
+  fill: var(--color-brand-secondary);
+  opacity: 0.55;
+}
+.lost {
+  opacity: 0.9;
+}
+.hatchLine {
+  stroke: var(--color-brand-accent);
+  stroke-width: 3;
+}
+.oldShore {
+  fill: none;
+  stroke: var(--color-text-secondary);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 6;
+  opacity: 0.7;
+}
+.shore {
+  fill: none;
+  stroke: var(--color-text-primary);
+  stroke-width: 2.5;
+}
+.tide {
+  fill: none;
+  stroke: var(--color-button-primary);
+  stroke-width: 2;
+  stroke-dasharray: 2 9;
+  stroke-linecap: round;
+  animation: tide 3.5s ease-in-out infinite alternate;
+}
+.grain {
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.site {
+  cursor: pointer;
+}
+.dot {
+  fill: var(--color-surface);
+  stroke: var(--color-text-primary);
+  stroke-width: 3;
+}
+.site[data-active="true"] .dot {
+  fill: var(--color-button-primary);
+  stroke: var(--color-button-primary-text);
+}
+.pulse {
+  fill: none;
+  stroke: var(--color-button-primary);
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse 2.4s ease-out infinite;
+}
+.siteLabel {
+  fill: var(--color-text-primary);
+  font-family: var(--font-label);
+  font-size: 15px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--color-surface);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+
+/* Style variants follow the direction's illustration style. */
+.explorer[data-visual="grid"] .shore {
+  stroke-linejoin: miter;
+  stroke-width: 2;
+}
+.explorer[data-visual="grid"] .land {
+  opacity: 0.25;
+}
+.explorer[data-visual="soft"] .shore {
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke: var(--color-brand-primary);
+}
+.explorer[data-visual="soft"] .contour {
+  stroke-width: 6;
+  stroke-linecap: round;
+  opacity: 0.18 !important;
+}
+.explorer[data-visual="soft"] .land {
+  opacity: 0.85;
+}
+
+.badge,
+.illustrative {
+  position: absolute;
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-small);
+  font-family: var(--font-label);
+  font-size: 0.75rem;
+  letter-spacing: var(--font-label-tracking);
+}
+.badge {
+  top: 0.75rem;
+  left: 0.75rem;
+  background: var(--color-surface-inverse);
+  color: var(--color-text-inverse);
+  font-weight: 600;
+}
+.illustrative {
+  right: 0.75rem;
+  bottom: 0.75rem;
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  text-transform: var(--font-label-transform);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+  min-width: 0;
+}
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+}
+.play {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: var(--color-button-primary);
+  color: var(--color-button-primary-text);
+  cursor: pointer;
+  transition: transform var(--motion-fast) var(--motion-easing);
+}
+.play:hover {
+  transform: scale(1.06);
+}
+.play svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+.slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+.sliderLabel {
+  font-family: var(--font-label);
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+.sliderLabel strong {
+  color: var(--color-text-primary);
+}
+.sliderLabel em {
+  font-style: normal;
+}
+.slider input {
+  width: 100%;
+  accent-color: var(--color-button-primary);
+}
+.scale {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-label);
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+}
+
+.readout {
+  padding: var(--space-s) var(--space-m);
+  border-left: 3px solid var(--color-brand-accent);
+  background: var(--color-surface);
+  border-radius: 0 var(--radius-small) var(--radius-small) 0;
+}
+.readoutName {
+  font-family: var(--font-label);
+  font-weight: var(--font-label-weight);
+  letter-spacing: var(--font-label-tracking);
+  text-transform: var(--font-label-transform);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+.readoutValue {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--font-display-tracking);
+  font-size: 2.75rem;
+  line-height: 1;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.readoutText {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.sites {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2xs);
+}
+.siteButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--motion-easing), background-color var(--motion-fast) var(--motion-easing);
+}
+.siteButton:hover {
+  border-color: var(--color-text-secondary);
+}
+.siteButton[aria-pressed="true"] {
+  border-color: var(--color-button-primary);
+  background: var(--color-button-primary);
+  color: var(--color-button-primary-text);
+}
+.siteValue {
+  font-family: var(--font-label);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+.siteButton:focus-visible,
+.play:focus-visible {
+  outline: 3px solid var(--color-brand-accent);
+  outline-offset: 2px;
+}
+
+/* On narrow sites the labels crowd the map; the list below carries the names instead. */
+@container (max-width: 599px) {
+  .siteLabel {
+    display: none;
+  }
+  .mapWrap {
+    aspect-ratio: 4 / 5;
+  }
+  .readoutValue {
+    font-size: 2.25rem;
+  }
+}
+
+@container (min-width: 1000px) {
+  .explorer {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-l);
+  }
+  .sites {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes tide {
+  from {
+    transform: translateX(-4px);
+  }
+  to {
+    transform: translateX(8px);
+  }
+}
+@keyframes pulse {
+  from {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tide,
+  .pulse {
+    animation: none;
+  }
+}

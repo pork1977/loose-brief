@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { DEMO_BRIEF } from "../data/demo-brief";
 import { DEMO_DIRECTIONS } from "../data/demo-directions";
 import { briefKey } from "../lib/brief";
-import { INITIAL_PROJECT, projectReducer, restoreProject, type ProjectState } from "./project";
+import { INITIAL_PROJECT, PROJECT_VERSION, projectReducer, restoreProject, type ProjectState } from "./project";
 import { directionsAreStale, selectedDirection, stageStatuses } from "./progress";
 
 const NOW = "2026-09-13T12:00:00.000Z";
@@ -77,7 +77,7 @@ test("a Phase 3 save (version 1) upgrades without losing the brief", () => {
   const v1 = { version: 1, brief: DEMO_BRIEF, briefStep: 2, furthestStep: 4, briefSubmittedAt: NOW, updatedAt: NOW };
   const { state, problem } = restoreProject(JSON.stringify(v1));
   assert.equal(problem, "none");
-  assert.equal(state.version, 3);
+  assert.equal(state.version, PROJECT_VERSION);
   assert.deepEqual(state.brief, DEMO_BRIEF);
   assert.equal(state.directions, null);
   assert.equal(state.selectedDirectionId, null);
@@ -248,4 +248,35 @@ test("restoring junk, an unknown version or a wrong shape falls back to a blank 
     assert.deepEqual(state, INITIAL_PROJECT);
   }
   assert.equal(restoreProject(null).problem, "empty");
+});
+
+test("a Phase 5 save (version 3) gains website sections and keeps brand edits", () => {
+  const withoutWebsite = (d: (typeof DEMO_DIRECTIONS)[number]) => {
+    const copy: Partial<typeof d> = { ...d };
+    delete copy.website;
+    return copy;
+  };
+  let chosen = projectReducer(withDirections(), { type: "direction/select", id: "shared-shore" }, NOW);
+  chosen = projectReducer(chosen, { type: "brand/edit", label: "Promise", changes: [{ path: "strategy.promise", value: "Kept after upgrade" }] }, NOW);
+  const v3 = {
+    ...chosen,
+    version: 3,
+    directions: chosen.directions && { ...chosen.directions, items: chosen.directions.items.map(withoutWebsite) },
+    brand: chosen.brand && { ...chosen.brand, direction: withoutWebsite(chosen.brand.direction) },
+  };
+  const { state, problem } = restoreProject(JSON.stringify(v3));
+  assert.equal(problem, "none");
+  assert.equal(state.brand?.direction.strategy.promise, "Kept after upgrade");
+  assert.equal(state.brand?.direction.website.sections.length, 8);
+  assert.equal(state.brand?.past.length, 1);
+});
+
+test("website copy and section visibility are editable, but the call to action can't be hidden", () => {
+  const state = projectReducer(withDirections(), { type: "direction/select", id: "littoral-intelligence" }, NOW);
+  const hidden = projectReducer(state, { type: "brand/edit", label: "Hide", changes: [{ path: "website.sections.0.hidden", value: true }] }, NOW);
+  assert.equal(hidden.brand?.direction.website.sections[0].hidden, true);
+  const cta = projectReducer(state, { type: "brand/edit", label: "Hide CTA", changes: [{ path: "website.sections.6.hidden", value: true }] }, NOW);
+  assert.equal(cta, state);
+  const retitled = projectReducer(state, { type: "brand/edit", label: "Title", changes: [{ path: "website.sections.1.title", value: "New title" }] }, NOW);
+  assert.equal((retitled.brand?.direction.website.sections[1] as { title: string }).title, "New title");
 });

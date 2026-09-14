@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useId, useRef, useState, ViewTransition, type KeyboardEvent } from "react";
 import { BrandScope } from "@/components/brand/BrandScope";
 import { ScaledPreview } from "@/components/brand/ScaledPreview";
-import { SitePreview } from "@/components/brand/SitePreview";
+import { Website } from "@/components/website/Website";
 import { ButtonLink } from "@/components/ui/Button";
 import { dispatch, useProject } from "@/state/project-store";
 import { ColoursTab } from "./ColoursTab";
 import { ComponentsTab } from "./ComponentsTab";
-import { InspectContext, Segmented } from "./controls";
+import { InspectContext, Segmented, useUndoShortcuts } from "./controls";
 import { HealthMeter, OverviewTab, TokensTab } from "./OverviewTokensTabs";
 import { TypeTab } from "./TypeTab";
 import { ImageryTab, VoiceTab } from "./VoiceImageryTabs";
@@ -46,25 +46,7 @@ function Workspace() {
   const brand = project?.state.brand;
   const source = project?.state.directions?.items.find((d) => d.id === brand?.sourceId);
 
-  // Keyboard undo and redo, except while typing, where the browser's own text undo should win.
-  useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent) => {
-      const target = e.target;
-      if (target instanceof Element && target.closest("input, textarea, select, [contenteditable='true']")) return;
-      const mod = e.metaKey || e.ctrlKey;
-      if (!mod) return;
-      const key = e.key.toLowerCase();
-      if (key === "z" && !e.shiftKey) {
-        e.preventDefault();
-        dispatch({ type: "brand/undo" });
-      } else if ((key === "z" && e.shiftKey) || key === "y") {
-        e.preventDefault();
-        dispatch({ type: "brand/redo" });
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  useUndoShortcuts();
 
   // Light up the parts of the preview that read the hovered tokens.
   useEffect(() => {
@@ -224,13 +206,13 @@ function Workspace() {
                 <ViewTransition name={`direction-preview-${brand.sourceId}`} share="auto" default="none">
                   <div>
                     <ScaledPreview designWidth={1200} label={`${brandName} homepage preview in ${previewMode} mode`} onContentElement={(node) => { previewRef.current = node; }}>
-                      <SitePreview brandName={brandName} direction={direction} />
+                      <Website brandName={brandName} direction={direction} />
                     </ScaledPreview>
                   </div>
                 </ViewTransition>
               </BrandScope>
             </div>
-            <p className={styles.previewNote}>Figures and the coastline drawing are illustrative.</p>
+            <p className={styles.previewNote}>A picture of the homepage. Try it out, and change its words, in the Studio.</p>
           </aside>
         </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useId, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useId, useState, type ReactNode } from "react";
 import { dispatch } from "@/state/project-store";
 import type { BrandChange } from "@/state/project";
 import styles from "./controls.module.css";
@@ -16,6 +16,27 @@ import styles from "./controls.module.css";
 
 export function brandEdit(label: string, changes: BrandChange[], coalesceKey?: string) {
   dispatch({ type: "brand/edit", label, changes, coalesceKey });
+}
+
+/** Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z (or Ctrl+Y) for brand history, except while typing, where text undo should win. */
+export function useUndoShortcuts() {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target;
+      if (target instanceof Element && target.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (!(e.metaKey || e.ctrlKey)) return;
+      const key = e.key.toLowerCase();
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        dispatch({ type: "brand/undo" });
+      } else if ((key === "z" && e.shiftKey) || key === "y") {
+        e.preventDefault();
+        dispatch({ type: "brand/redo" });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 }
 
 /* ------------------------------------------------------------ inspector */

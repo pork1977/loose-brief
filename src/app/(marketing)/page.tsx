@@ -15,7 +15,7 @@ export default function LandingPage() {
             <h1 className={styles.title}>Turn an idea into an identity.</h1>
             <p className={styles.lead}>
               Describe a business in a few sentences. Loose Brief works up three brand directions, turns the one you
-              pick into a design system, and builds a working website from it.
+              pick into a design system, and builds a homepage from it that you can edit and download.
             </p>
             <div className={styles.heroActions}>
               <ButtonLink href="/brief" variant="primary" size="large" transitionTypes={["nav-forward"]}>

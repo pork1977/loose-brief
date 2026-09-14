@@ -45,7 +45,7 @@ export const STAGES: readonly Stage[] = [
     number: "05",
     label: "Export",
     href: "/export",
-    summary: "Take it away as CSS variables, JSON tokens or a Tailwind theme, with a DESIGN.md and brand guidelines.",
+    summary: "Download the homepage as a site you can put online, plus the tokens, a Tailwind theme, a DESIGN.md and brand guidelines.",
   },
 ];
 

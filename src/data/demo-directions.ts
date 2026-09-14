@@ -1,6 +1,7 @@
 import { deriveColorSet } from "@/lib/color-modes";
 import type { Direction } from "@/lib/direction";
 import type { ColorSet } from "@/lib/tokens";
+import { demoWebsite } from "./demo-website";
 
 /*
  * The three built-in directions for the Ebbfield demo brand.
@@ -134,6 +135,16 @@ export const littoralIntelligence: Direction = {
     },
   ],
   tradeOff: "The quiet, editorial feel could seem slow to a planner who wants the numbers straight away.",
+  website: demoWebsite({
+    problemTitle: "Coastal decisions are made with evidence that arrives too late.",
+    problemBody: "Shorelines change every season, but the evidence behind adaptation plans is often years old, scattered and hard to compare. Good decisions need a clearer, shared picture.",
+    howTitle: "From scattered records to a plan that holds up.",
+    dataTitle: "Watch a shoreline change over fifty years.",
+    featuresTitle: "Everything a coastal team needs to plan with confidence.",
+    impactTitle: "Better evidence, earlier.",
+    ctaTitle: "See your coastline in Ebbfield.",
+    ctaBody: "A 30-minute demonstration using your own stretch of coast, for councils and research teams.",
+  }),
   tokens: {
     mode: "light",
     color: littoralColors,
@@ -234,6 +245,16 @@ export const signalCoast: Direction = {
     },
   ],
   tradeOff: "Hopeful is the trait this route plays down most. It may feel cold to community groups.",
+  website: demoWebsite({
+    problemTitle: "Annual surveys can't keep up with a coast that moves every tide.",
+    problemBody: "Erosion accelerates between reviews. Data lives in six systems and three formats. By the time the report is signed off, the numbers have already moved.",
+    howTitle: "Ingest. Model. Act.",
+    dataTitle: "2000 to 2050, one slider.",
+    featuresTitle: "Measurement, forecasting and alerts in one platform.",
+    impactTitle: "Measured results from the pilot.",
+    ctaTitle: "Book a demo with your own data.",
+    ctaBody: "We load a sample of your coastline and walk your team through the model in 30 minutes.",
+  }),
   tokens: {
     mode: "dark",
     color: deriveColorSet(signalColors, "light"),
@@ -334,6 +355,16 @@ export const sharedShore: Direction = {
     },
   ],
   tradeOff: "Scientific comes through least. Research partners may find it too soft.",
+  website: demoWebsite({
+    problemTitle: "Everyone can see the coast changing. Few people know what to do about it.",
+    problemBody: "Residents, councils and researchers often look at different information and talk past each other. Ebbfield gives everyone the same clear picture, so plans get agreed sooner.",
+    howTitle: "Three steps to a plan people can agree on.",
+    dataTitle: "See how your shore has changed.",
+    featuresTitle: "Made for the people who look after the coast.",
+    impactTitle: "What changed for one coastal community.",
+    ctaTitle: "Let's talk about your coast.",
+    ctaBody: "Tell us a little about where you are and we'll show you what Ebbfield could do there.",
+  }),
   tokens: {
     mode: "light",
     color: sharedColors,

@@ -33,6 +33,9 @@ Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`, `npm test`.
 | `src/lib/health.ts` | The identity health checks |
 | `src/lib/exporters.ts` | CSS variables and W3C design token JSON |
 | `src/components/brand-system` | The brand system editor: tabs, controls and live preview |
+| `src/lib/website.ts` | The homepage as data: section schema, order and limits |
+| `src/components/website` | The generated homepage, rendered only from brand tokens, and the coastline explorer |
+| `src/components/studio` | The Studio: device frames, section list and before-and-after |
 | `src/state` | Project state: a pure reducer, and a store that saves it in the browser and restores it safely |
 | `src/data/demo-brief.ts` | The Ebbfield demo brief |
 | `src/data/demo-directions.ts` | The three built-in directions for Ebbfield, the fictional demo brand |

@@ -1,22 +1,16 @@
 import type { Metadata } from "next";
+import { PageTransition } from "@/components/PageTransition";
 import { StageGate } from "@/components/studio/StageGate";
-import { StagePlaceholder } from "@/components/studio/StagePlaceholder";
+import { StudioWorkspace } from "@/components/studio/StudioWorkspace";
 
 export const metadata: Metadata = { title: "Studio" };
 
 export default function StudioPage() {
   return (
-    <StageGate stageId="studio">
-    <StagePlaceholder
-      stageId="studio"
-      phase={6}
-      parts={[
-        { title: "Homepage", body: "Ten sections built from the brand tokens, including an illustrative coastline graphic." },
-        { title: "Viewports", body: "Desktop, tablet and mobile previews." },
-        { title: "Creative Director", body: "Ask for changes, see what will change, then apply or cancel. Arrives in Phase 7." },
-        { title: "Before and after", body: "Compare the site before and after a change." },
-      ]}
-    />
+    <StageGate stageId="studio" showSelection={false}>
+      <PageTransition>
+        <StudioWorkspace />
+      </PageTransition>
     </StageGate>
   );
 }

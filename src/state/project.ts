@@ -11,7 +11,7 @@ import { MODES, getPath, setPath, type Mode } from "@/lib/tokens";
  * in Node. Saving, restoring and the React hook live in project-store.ts.
  */
 
-export const PROJECT_VERSION = 3;
+export const PROJECT_VERSION = 4;
 
 const directionsStateSchema = z.object({
   /** "demo" for the built-in Ebbfield set, "live" once generation exists. */
@@ -102,7 +102,7 @@ export type ProjectAction =
   | { type: "project/reset" };
 
 /** Parts of a direction the brand editor may change. Ids, letters and the original reasoning stay fixed. */
-const EDITABLE = /^(tokens|strategy|sample|voice|imagery|motion)(\.|$)|^visual$/;
+const EDITABLE = /^(tokens|strategy|sample|voice|imagery|motion|website)(\.|$)|^visual$/;
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -332,6 +332,23 @@ function migrate(data: unknown): unknown {
       directions: valid,
       selectedDirectionId: selected ? saved.selectedDirectionId : null,
       brand: selected ? newBrand(selected as Direction) : null,
+    };
+  }
+
+  if (saved.version === 3) {
+    // Directions gained website sections. Add each demo direction's copy, keeping any edits already made.
+    const withWebsite = (d: unknown) => {
+      if (typeof d !== "object" || d === null) return d;
+      const demo = DEMO_DIRECTIONS.find((x) => x.id === (d as { id?: string }).id);
+      return demo ? { ...d, website: structuredClone(demo.website) } : d;
+    };
+    const directions = saved.directions as { items?: unknown[] } | null;
+    const brand = saved.brand as { direction?: unknown } | null;
+    saved = {
+      ...saved,
+      version: 4,
+      directions: directions?.items ? { ...directions, items: directions.items.map(withWebsite) } : directions,
+      brand: brand?.direction ? { ...brand, direction: withWebsite(brand.direction) } : brand,
     };
   }
 

@@ -1,0 +1,157 @@
+.workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-s);
+  max-width: 110rem;
+  margin-inline: auto;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ui-space-m);
+}
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2xs);
+  max-width: 40rem;
+  min-width: 0;
+}
+.title {
+  font-size: var(--ui-text-2xl);
+  overflow-wrap: anywhere;
+}
+.intro {
+  color: var(--ui-color-text-secondary);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-xs) var(--ui-space-s);
+}
+.history {
+  display: flex;
+  gap: var(--ui-space-3xs);
+}
+
+.compareToggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--ui-color-border-strong);
+  border-radius: 999px;
+  background: var(--ui-color-surface-raised);
+  font-size: var(--ui-text-s);
+  cursor: pointer;
+}
+.compareToggle input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--ui-color-accent);
+}
+.compareToggle:has(input:checked) {
+  border-color: var(--ui-color-text-primary);
+  box-shadow: inset 0 0 0 1px var(--ui-color-text-primary);
+}
+.compareToggle[data-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status {
+  font-size: var(--ui-text-xs);
+  color: var(--ui-color-text-secondary);
+}
+
+.columns {
+  display: grid;
+  gap: var(--ui-space-m);
+  align-items: start;
+}
+
+.railWrap {
+  min-width: 0;
+  padding: var(--ui-space-s);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-panel);
+  background: var(--ui-color-surface);
+}
+.railSummary {
+  margin-bottom: var(--ui-space-xs);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-color-text-secondary);
+  cursor: pointer;
+}
+
+.stage {
+  display: grid;
+  gap: var(--ui-space-s);
+  min-width: 0;
+}
+.stage[data-compare="true"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2xs);
+  min-width: 0;
+}
+.paneLabel {
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  color: var(--ui-color-text-secondary);
+}
+.canvasBox {
+  height: max(34rem, calc(100dvh - 15rem));
+}
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ui-space-s);
+  margin-top: var(--ui-space-s);
+  padding-top: var(--ui-space-m);
+  border-top: 1px solid var(--ui-color-border);
+}
+
+@media (min-width: 64rem) {
+  .columns {
+    grid-template-columns: 19rem minmax(0, 1fr);
+  }
+  .railWrap {
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100dvh - 6rem);
+    overflow-y: auto;
+  }
+  /* On wide screens the list is always open; the summary is just its heading. */
+  .railSummary {
+    pointer-events: none;
+    list-style: none;
+  }
+  .railSummary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@media (max-width: 63.99rem) {
+  .canvasBox {
+    height: 75dvh;
+  }
+  .stage[data-compare="true"] {
+    grid-template-columns: 1fr;
+  }
+}
