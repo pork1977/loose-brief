@@ -55,6 +55,10 @@ export type Section = z.infer<typeof sectionSchema>;
 export type SectionOf<T extends SectionType> = Extract<Section, { type: T }>;
 
 export const websiteSchema = z.object({
+  layout: z.object({
+    /** On narrow screens, drop the credibility strip, hero illustration, extra features and the quote. */
+    mobileSimplified: z.boolean(),
+  }),
   sections: z
     .array(sectionSchema)
     .length(SECTION_ORDER.length)

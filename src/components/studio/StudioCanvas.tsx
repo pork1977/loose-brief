@@ -59,8 +59,9 @@ export function StudioCanvas({ brandName, direction, mode, viewport, label, onAp
   }, []);
 
   const deviceWidth = VIEWPORTS[viewport].width;
-  const gap = viewport === "desktop" ? 0 : 24;
-  const scale = box.width > 0 ? Math.min(1, (box.width - gap) / deviceWidth) : 1;
+  // Frame border on both sides (see .device): a hairline for desktop, a device bezel otherwise.
+  const bezel = viewport === "desktop" ? 2 : 16;
+  const scale = box.width > 0 ? Math.min(1, (box.width - bezel - (viewport === "desktop" ? 0 : 8)) / deviceWidth) : 1;
 
   const goTo = useCallback(
     (target: SiteTarget, flash = false) => {
@@ -101,7 +102,7 @@ export function StudioCanvas({ brandName, direction, mode, viewport, label, onAp
 
   const frame = useMemo<WebsiteFrame>(() => ({ interactive: true, scrollRoot: scroller, goTo }), [scroller, goTo]);
 
-  const height = box.height;
+  const height = Math.max(0, box.height - bezel);
 
   return (
     <div ref={outer} className={styles.outer} data-viewport={viewport}>

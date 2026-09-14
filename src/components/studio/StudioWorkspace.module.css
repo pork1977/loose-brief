@@ -127,23 +127,66 @@
   border-top: 1px solid var(--ui-color-border);
 }
 
+.previewBanner {
+  grid-column: 1 / -1;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--ui-color-accent);
+  border-radius: var(--ui-radius-control);
+  background: var(--ui-color-accent-soft);
+  font-size: var(--ui-text-xs);
+}
+
+.directorWrap {
+  min-width: 0;
+}
+.directorWrap > section {
+  height: 34rem;
+}
+
+/* Narrow: the site first, then the Creative Director, then the section list. */
+.stage {
+  order: 1;
+}
+.directorWrap {
+  order: 2;
+}
+.railWrap {
+  order: 3;
+}
+
 @media (min-width: 64rem) {
   .columns {
-    grid-template-columns: 19rem minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 21rem;
+    grid-template-areas:
+      "rail rail"
+      "stage director";
+  }
+  .railWrap {
+    grid-area: rail;
+  }
+  .stage {
+    grid-area: stage;
+  }
+  .directorWrap {
+    grid-area: director;
+    position: sticky;
+    top: 5rem;
+  }
+  .directorWrap > section {
+    height: max(34rem, calc(100dvh - 11rem));
+  }
+}
+
+@media (min-width: 90rem) {
+  .columns {
+    grid-template-columns: 17rem minmax(0, 1fr) 22rem;
+    grid-template-areas: "rail stage director";
   }
   .railWrap {
     position: sticky;
     top: 5rem;
     max-height: calc(100dvh - 6rem);
     overflow-y: auto;
-  }
-  /* On wide screens the list is always open; the summary is just its heading. */
-  .railSummary {
-    pointer-events: none;
-    list-style: none;
-  }
-  .railSummary::-webkit-details-marker {
-    display: none;
   }
 }
 

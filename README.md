@@ -35,7 +35,9 @@ Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`, `npm test`.
 | `src/components/brand-system` | The brand system editor: tabs, controls and live preview |
 | `src/lib/website.ts` | The homepage as data: section schema, order and limits |
 | `src/components/website` | The generated homepage, rendered only from brand tokens, and the coastline explorer |
-| `src/components/studio` | The Studio: device frames, section list and before-and-after |
+| `src/components/studio` | The Studio: device frames, section list, before-and-after and the Creative Director panel |
+| `src/lib/refinement.ts` | The Creative Director's built-in rules: matching requests and planning changes |
+| `src/state/director.ts` | Turning a request into a validated, previewable proposal |
 | `src/state` | Project state: a pure reducer, and a store that saves it in the browser and restores it safely |
 | `src/data/demo-brief.ts` | The Ebbfield demo brief |
 | `src/data/demo-directions.ts` | The three built-in directions for Ebbfield, the fictional demo brand |

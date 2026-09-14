@@ -23,7 +23,7 @@ import styles from "./Website.module.css";
 export function Website({ brandName, direction }: { brandName: string; direction: Direction }) {
   const { website } = direction;
   return (
-    <div className={styles.site} data-tokens="--color-background --font-body">
+    <div className={styles.site} data-mobile-simple={website.layout.mobileSimplified} data-tokens="--color-background --font-body">
       <Nav brandName={brandName} direction={direction} />
       <main>
         <Hero direction={direction} />

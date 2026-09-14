@@ -767,3 +767,22 @@
     box-shadow: inset 0 0 0 4px transparent;
   }
 }
+
+/* ---- Simplified mobile layout (a website layout setting) ---- */
+
+@container (max-width: 599px) {
+  .site[data-mobile-simple="true"] {
+    --gutter: var(--space-s);
+  }
+  .site[data-mobile-simple="true"] .credibility,
+  .site[data-mobile-simple="true"] .heroVisual,
+  .site[data-mobile-simple="true"] .quote,
+  .site[data-mobile-simple="true"] .featureGrid > li:nth-child(n + 4),
+  .site[data-mobile-simple="true"] .points li:nth-child(n + 3) {
+    display: none;
+  }
+  .site[data-mobile-simple="true"] .section,
+  .site[data-mobile-simple="true"] .impact {
+    padding-block: var(--space-xl);
+  }
+}

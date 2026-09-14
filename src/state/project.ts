@@ -11,7 +11,7 @@ import { MODES, getPath, setPath, type Mode } from "@/lib/tokens";
  * in Node. Saving, restoring and the React hook live in project-store.ts.
  */
 
-export const PROJECT_VERSION = 4;
+export const PROJECT_VERSION = 5;
 
 const directionsStateSchema = z.object({
   /** "demo" for the built-in Ebbfield set, "live" once generation exists. */
@@ -37,6 +37,35 @@ export type BrandEdit = z.infer<typeof editSchema>;
 export const HISTORY_LIMIT = 60;
 const COALESCE_MS = 1500;
 
+export const DIRECTOR_LIMIT = 30;
+
+/** One exchange with the Creative Director: what was asked and what it proposed. */
+const directorMessageSchema = z.object({
+  id: z.string().max(80),
+  at: z.string(),
+  request: z.string().max(300),
+  reply: z.discriminatedUnion("kind", [
+    z.object({
+      kind: z.literal("proposal"),
+      commandId: z.string().max(40),
+      changeType: z.string().max(40),
+      summary: z.string().max(240),
+      because: z.string().max(400),
+      affected: z.array(z.string().max(80)).max(20),
+      changes: z.array(z.object({ path: z.string().max(120), from: z.unknown(), to: z.unknown() })).min(1).max(40),
+      match: z.number().min(0).max(1),
+      focus: z.string().max(20).nullable(),
+      viewport: z.enum(["desktop", "tablet", "mobile"]).nullable(),
+    }),
+    z.object({ kind: z.literal("noop"), commandId: z.string().max(40), text: z.string().max(400), focus: z.string().max(20).nullable() }),
+    z.object({ kind: z.literal("unknown"), text: z.string().max(400) }),
+  ]),
+  status: z.enum(["pending", "applied", "cancelled", "reply"]),
+  /** The history entry created by applying, so the panel can tell whether it's since been undone. */
+  editId: z.string().nullable(),
+});
+export type DirectorMessage = z.infer<typeof directorMessageSchema>;
+
 const brandStateSchema = z.object({
   /** The direction this brand was started from. Reset goes back to it. */
   sourceId: z.string(),
@@ -46,6 +75,8 @@ const brandStateSchema = z.object({
   previewMode: z.enum(MODES),
   past: z.array(editSchema).max(HISTORY_LIMIT),
   future: z.array(editSchema).max(HISTORY_LIMIT),
+  /** Creative Director conversation, newest last. */
+  director: z.array(directorMessageSchema).max(DIRECTOR_LIMIT),
 });
 export type BrandState = z.infer<typeof brandStateSchema>;
 
@@ -99,6 +130,10 @@ export type ProjectAction =
   | { type: "brand/redo" }
   | { type: "brand/reset" }
   | { type: "brand/setPreviewMode"; mode: Mode }
+  | { type: "director/ask"; message: DirectorMessage }
+  | { type: "director/apply"; messageId: string; label: string; changes: BrandChange[] }
+  | { type: "director/cancel"; messageId: string }
+  | { type: "director/clear" }
   | { type: "project/reset" };
 
 /** Parts of a direction the brand editor may change. Ids, letters and the original reasoning stay fixed. */
@@ -107,7 +142,7 @@ const EDITABLE = /^(tokens|strategy|sample|voice|imagery|motion|website)(\.|$)|^
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 function newBrand(direction: Direction): BrandState {
-  return { sourceId: direction.id, direction: structuredClone(direction), previewMode: direction.tokens.mode, past: [], future: [] };
+  return { sourceId: direction.id, direction: structuredClone(direction), previewMode: direction.tokens.mode, past: [], future: [], director: [] };
 }
 
 /** Apply changes to a direction, recording before and after. Null if nothing changed or the result is invalid. */
@@ -302,6 +337,43 @@ export function projectReducer(state: ProjectState, action: ProjectAction, now =
       if (!state.brand || state.brand.previewMode === action.mode) return state;
       return touched({ ...state, brand: { ...state.brand, previewMode: action.mode } });
 
+    case "director/ask": {
+      if (!state.brand) return state;
+      // Asking again replaces any proposal still waiting for an answer.
+      const earlier = state.brand.director.map((m) => (m.status === "pending" ? { ...m, status: "cancelled" as const } : m));
+      return touched({ ...state, brand: { ...state.brand, director: [...earlier, action.message].slice(-DIRECTOR_LIMIT) } });
+    }
+
+    case "director/apply": {
+      const brand = state.brand;
+      const message = brand?.director.find((m) => m.id === action.messageId);
+      if (!brand || !message || message.status !== "pending") return state;
+      const applied = applyBrandChanges(brand.direction, action.changes);
+      if (!applied) return state;
+      const edit: BrandEdit = { id: editId(), label: action.label.slice(0, 120), at: now, coalesceKey: null, changes: applied.recorded };
+      const withEdit = pushEdit(brand, edit, applied.direction);
+      return touched({
+        ...state,
+        brand: {
+          ...withEdit,
+          director: withEdit.director.map((m) => (m.id === action.messageId ? { ...m, status: "applied" as const, editId: edit.id } : m)),
+        },
+      });
+    }
+
+    case "director/cancel": {
+      const brand = state.brand;
+      if (!brand?.director.some((m) => m.id === action.messageId && m.status === "pending")) return state;
+      return touched({
+        ...state,
+        brand: { ...brand, director: brand.director.map((m) => (m.id === action.messageId ? { ...m, status: "cancelled" as const } : m)) },
+      });
+    }
+
+    case "director/clear":
+      if (!state.brand?.director.length) return state;
+      return touched({ ...state, brand: { ...state.brand, director: [] } });
+
     case "project/reset":
       return { ...INITIAL_PROJECT, updatedAt: now };
   }
@@ -349,6 +421,23 @@ function migrate(data: unknown): unknown {
       version: 4,
       directions: directions?.items ? { ...directions, items: directions.items.map(withWebsite) } : directions,
       brand: brand?.direction ? { ...brand, direction: withWebsite(brand.direction) } : brand,
+    };
+  }
+
+  if (saved.version === 4) {
+    // Websites gained a layout setting, and the brand gained the Creative Director conversation.
+    const withLayout = (d: unknown) => {
+      if (typeof d !== "object" || d === null) return d;
+      const website = (d as { website?: Record<string, unknown> }).website;
+      return website && !website.layout ? { ...d, website: { ...website, layout: { mobileSimplified: false } } } : d;
+    };
+    const directions = saved.directions as { items?: unknown[] } | null;
+    const brand = saved.brand as { direction?: unknown } | null;
+    saved = {
+      ...saved,
+      version: 5,
+      directions: directions?.items ? { ...directions, items: directions.items.map(withLayout) } : directions,
+      brand: brand ? { ...brand, direction: withLayout(brand.direction), director: [] } : brand,
     };
   }
 

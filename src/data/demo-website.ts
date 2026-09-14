@@ -24,6 +24,7 @@ type Voiced = {
 
 export function demoWebsite(v: Voiced): Website {
   return {
+    layout: { mobileSimplified: false },
     sections: [
       {
         id: "credibility",

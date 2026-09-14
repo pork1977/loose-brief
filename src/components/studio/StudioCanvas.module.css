@@ -10,6 +10,8 @@
 
 .device {
   flex: none;
+  /* The frame's border sits outside the device width, so the site gets its full width. */
+  box-sizing: content-box;
   overflow: hidden;
   border: 1px solid var(--ui-color-border-strong);
   border-radius: var(--ui-radius-card);
