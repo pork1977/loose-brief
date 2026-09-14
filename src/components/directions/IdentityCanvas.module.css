@@ -1,0 +1,390 @@
+/* The canvas takes the active brand's tokens; only the caption uses Loose Brief's. */
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+  min-width: 0;
+}
+
+.scope {
+  container-type: inline-size;
+  border: 1px solid var(--ui-color-border-strong);
+  border-radius: var(--ui-radius-panel);
+  overflow: hidden;
+  box-shadow: var(--ui-shadow-panel);
+}
+
+.board {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-text-primary) 12%, transparent) 1px, transparent 0) 0 0 / 22px 22px,
+    var(--color-background);
+  color: var(--color-text-primary);
+}
+
+.columnLabel {
+  margin-bottom: 0.5rem;
+  font-family: var(--font-label);
+  font-weight: var(--font-label-weight);
+  letter-spacing: var(--font-label-tracking);
+  text-transform: var(--font-label-transform);
+  font-size: 0.625rem;
+  color: var(--color-text-secondary);
+}
+
+/* ---- Lines ---- */
+
+.lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.line {
+  fill: none;
+  stroke: var(--color-button-primary);
+  stroke-width: 1.25;
+  opacity: 0.35;
+  /* pathLength="1" on each path, so this draws the whole curve whatever its real length. */
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw var(--motion-slow) var(--motion-easing) forwards;
+  transition:
+    opacity var(--motion-fast) ease,
+    stroke-width var(--motion-fast) ease;
+}
+.line[data-dim="true"] {
+  opacity: 0.08;
+}
+.line[data-strong="true"] {
+  opacity: 0.9;
+  stroke-width: 2;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---- Traits ---- */
+
+.traits {
+  position: relative;
+  z-index: 1;
+}
+.traits ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.trait {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition:
+    border-color var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    color var(--motion-fast) ease;
+}
+.trait[data-linked="false"] {
+  opacity: 0.55;
+}
+.trait[data-lit="true"] {
+  border-color: var(--color-button-primary);
+  background: var(--color-button-primary);
+  color: var(--color-button-primary-text);
+}
+
+/* ---- Brand node ---- */
+
+.brand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.brandName {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--font-display-tracking);
+  line-height: var(--font-display-leading);
+  font-size: clamp(2rem, 5cqi, 3.5rem);
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+.directionName {
+  font-family: var(--font-label);
+  font-weight: var(--font-label-weight);
+  letter-spacing: var(--font-label-tracking);
+  text-transform: var(--font-label-transform);
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+}
+
+/* ---- Areas ---- */
+
+.areas {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.area {
+  min-width: 0;
+  transition: opacity var(--motion-fast) ease;
+}
+.area[data-dim="true"] {
+  opacity: 0.45;
+}
+.areaButton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.areaButton[aria-pressed="true"] {
+  border-color: var(--color-button-primary);
+  box-shadow: 0 0 0 1px var(--color-button-primary), var(--shadow-card);
+}
+.areaButton:focus-visible {
+  outline: 2px solid var(--color-button-primary);
+  outline-offset: 2px;
+}
+.areaLabel {
+  font-family: var(--font-label);
+  font-weight: var(--font-label-weight);
+  letter-spacing: var(--font-label-tracking);
+  text-transform: var(--font-label-transform);
+  font-size: 0.625rem;
+  color: var(--color-text-secondary);
+}
+.areaVisual {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+.decision {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.because {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.swatches {
+  display: flex;
+  width: 100%;
+  height: 2.25rem;
+  border-radius: var(--radius-small);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+.swatches span {
+  flex: 1;
+}
+.typeSample {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.glyph {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 2.25rem;
+  line-height: 1;
+  /* The button colour is always chosen to stand out from the page; brand primary isn't (Signal Coast's is navy on navy). */
+  color: var(--color-button-primary);
+}
+.fontName {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.quote {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--font-display-tracking);
+  font-size: 0.9375rem;
+  line-height: 1.2;
+}
+.image {
+  display: block;
+  width: 100%;
+  height: 2.75rem;
+  border-radius: var(--radius-small);
+  overflow: hidden;
+}
+.motion {
+  display: flex;
+  width: 100%;
+}
+.components {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+.button {
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-button);
+  background: var(--color-button-primary);
+  color: var(--color-button-primary-text);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.miniCard {
+  flex: 1;
+  min-width: 1.5rem;
+  height: 2rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-background);
+}
+
+/* ---- Wide layouts ---- */
+
+@container (min-width: 52rem) {
+  .board[data-mode="constellation"] {
+    grid-template-columns: 10rem minmax(9rem, 1fr) minmax(0, 24rem);
+    align-items: center;
+    gap: 2.5rem;
+    padding: 2rem;
+    min-height: 34rem;
+  }
+  .board[data-mode="constellation"] .traits ul {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+  .board[data-mode="constellation"] .brand {
+    align-items: center;
+    justify-self: center;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-card);
+    background: var(--color-background);
+    text-align: center;
+  }
+  /* One column of wide, flat cards, so every line lands on its own card. */
+  .board[data-mode="constellation"] .areas {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .board[data-mode="constellation"] .areaButton {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 0.85rem;
+    row-gap: 0.15rem;
+    padding: 0.6rem 0.75rem;
+  }
+  .board[data-mode="constellation"] .areaVisual {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    min-height: 2.5rem;
+  }
+  .board[data-mode="constellation"] .areaLabel {
+    grid-column: 2;
+    align-self: end;
+  }
+  .board[data-mode="constellation"] .decision {
+    grid-column: 2;
+  }
+  .board[data-mode="constellation"] .image {
+    height: 2.5rem;
+  }
+  .board[data-mode="constellation"] .glyph {
+    font-size: 1.75rem;
+  }
+  .board[data-mode="constellation"] .fontName {
+    display: none;
+  }
+  .board[data-mode="constellation"] .miniCard {
+    display: none;
+  }
+
+  .board[data-mode="system"] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    grid-template-areas:
+      "brand traits"
+      "areas areas";
+    align-items: end;
+    gap: 1.5rem 2rem;
+    padding: 2rem;
+  }
+  .board[data-mode="system"] .brand {
+    grid-area: brand;
+  }
+  .board[data-mode="system"] .traits {
+    grid-area: traits;
+    justify-self: end;
+  }
+  .board[data-mode="system"] .traits ul {
+    justify-content: flex-end;
+  }
+  .board[data-mode="system"] .areas {
+    grid-area: areas;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  .board[data-mode="system"] .areaVisual {
+    min-height: 4rem;
+  }
+  .board[data-mode="system"] .image {
+    height: 4rem;
+  }
+}
+
+/* Narrow: a plain stacked list, no lines. */
+@container (max-width: 51.99rem) {
+  .lines {
+    display: none;
+  }
+}
+
+.caption {
+  font-size: var(--ui-text-xs);
+  color: var(--ui-color-text-secondary);
+}

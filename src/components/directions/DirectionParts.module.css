@@ -1,0 +1,276 @@
+/* Palette, type, headline: brand tokens (these sit inside a BrandScope). */
+
+.palette {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem 0.75rem;
+}
+.palette li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.45rem;
+  align-items: center;
+  min-width: 0;
+}
+.chip {
+  grid-row: span 2;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-small);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+}
+.role {
+  font-family: var(--font-label);
+  font-size: 0.625rem;
+  letter-spacing: var(--font-label-tracking);
+  text-transform: var(--font-label-transform);
+  color: var(--color-text-secondary);
+  line-height: 1.2;
+}
+.hex {
+  font-size: 0.6875rem;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+.palette[data-compact="true"] {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.palette[data-compact="true"] li {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+  row-gap: 0.2rem;
+}
+.palette[data-compact="true"] .chip {
+  grid-row: auto;
+  width: 100%;
+  height: 2.25rem;
+}
+
+.type {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.typeGlyph {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--font-display-tracking);
+  font-size: 3.5rem;
+  line-height: 1;
+  /* The button colour is always chosen to stand out from the page; brand primary isn't (Signal Coast's is navy on navy). */
+  color: var(--color-button-primary);
+}
+.typeNames {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  font-size: 0.8125rem;
+}
+.typeNames div {
+  display: flex;
+  gap: 0.5rem;
+}
+.typeNames dt {
+  min-width: 3.5rem;
+  font-family: var(--font-label);
+  font-size: 0.625rem;
+  letter-spacing: var(--font-label-tracking);
+  text-transform: var(--font-label-transform);
+  color: var(--color-text-secondary);
+  line-height: 1.9;
+}
+.typeNames dd {
+  color: var(--color-text-primary);
+}
+
+.headlineSample {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.eyebrow {
+  font-family: var(--font-label);
+  font-weight: var(--font-label-weight);
+  letter-spacing: var(--font-label-tracking);
+  text-transform: var(--font-label-transform);
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+}
+.headline {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  line-height: var(--font-display-leading);
+  letter-spacing: var(--font-display-tracking);
+  font-size: clamp(1.625rem, 1.2rem + 1vw, 2.125rem);
+  color: var(--color-text-primary);
+  text-wrap: balance;
+}
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+.primaryButton,
+.secondaryButton {
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius-button);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.primaryButton {
+  background: var(--color-button-primary);
+  color: var(--color-button-primary-text);
+}
+.secondaryButton {
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+/* Why and contrast: Loose Brief's own tokens (these sit outside the brand scope). */
+
+.why {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-s);
+}
+.decisions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-s);
+}
+.decisions > li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-left: var(--ui-space-xs);
+  border-left: 2px solid var(--ui-color-border-strong);
+}
+.decisionArea {
+  font-family: var(--ui-font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-color-text-muted);
+}
+.decision {
+  font-size: var(--ui-text-s);
+  font-weight: 600;
+}
+.because {
+  font-size: var(--ui-text-s);
+  color: var(--ui-color-text-secondary);
+}
+.sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+.sources :global(.ui-chip) {
+  white-space: normal;
+}
+.tradeOff {
+  padding: var(--ui-space-xs) var(--ui-space-s);
+  border-radius: var(--ui-radius-control);
+  background: var(--ui-color-surface-sunken);
+  font-size: var(--ui-text-s);
+}
+
+.contrast {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+}
+.contrastHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-2xs);
+}
+.contrastScore {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: var(--ui-text-s);
+  font-weight: 600;
+}
+.scoreIcon {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: var(--ui-color-error);
+  color: var(--ui-color-surface-raised);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.contrastScore[data-ok="true"] .scoreIcon {
+  background: var(--ui-color-success);
+}
+
+.fixes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.fixes :global(.ui-notice) {
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: var(--ui-text-xs);
+}
+.fixLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+.fixSwatch {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px var(--ui-color-border-strong);
+}
+
+.checks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.checks li {
+  display: grid;
+  grid-template-columns: 1rem 2.25rem 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--ui-text-xs);
+}
+.checkIcon {
+  font-weight: 700;
+  color: var(--ui-color-success);
+}
+.checks li[data-passes="false"] .checkIcon {
+  color: var(--ui-color-error);
+}
+.checkPair span {
+  display: grid;
+  place-items: center;
+  height: 1.5rem;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--ui-color-border);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.checkLabel {
+  color: var(--ui-color-text-secondary);
+}
+.checkRatio {
+  font-family: var(--ui-font-mono);
+  font-size: 0.6875rem;
+}

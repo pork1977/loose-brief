@@ -152,7 +152,7 @@ Each phase ends with the dev server running, the change checked in the browser, 
 | 1 | Audit | Done. This document |
 | 2 | Visual shell | Done 2026-09-13. Landing, nav, page transitions, app tokens, responsive layout, base button, card and panel. No AI |
 | 3 | Brief | Done 2026-09-13. Five steps, validation, live summary with a rule-based personality reading, "Load demo brief", project state saved in the browser, safe refresh, and the first part of Materials (colour reading from uploaded images) |
-| 4 | Directions | zod schemas first, then three Ebbfield directions as data, cards, palette and type previews, compare mode, selection, loading state, contrast checks, identity canvas |
+| 4 | Directions | Done 2026-09-14. Direction and token schemas (strict, so live output can't inject CSS), three Ebbfield directions with reasoning for every decision and a stated trade-off, cards, compare dialog, selection, loading sequence (labelled as demo pacing), WCAG contrast checks with one-click fixes, identity canvas that links traits to decisions and regroups into a system on selection. Later stages now need a chosen direction |
 | 5 | Brand system | Token model and compiler, seven tabs, colour and type editors, radius and contrast controls, dark mode, token inspector, reset |
 | 6 | Website studio | Ten section homepage, coastline visual (labelled illustrative), viewport controls, before and after |
 | 7 | Refinement engine | Nine preset commands, change preview, apply, cancel, undo, redo, command history, "show me why" |
@@ -241,4 +241,4 @@ A visitor can:
 
 - Repo: **private** GitHub repo `loose-brief` (decided 2026-09-13, reversing the earlier public plan) because paid features may be added. Keys still stay in `.env.local`, which is gitignored.
 - Hosting: a Vercel project called `loose-brief` at ship time. Paul picks and connects the domain.
-- Photos for Shared Shore (see above). Decide at Phase 4.
+- Photos for Shared Shore: decided at Phase 4 to use drawn imagery like the other two directions, since the brief rules out stock photography. Real photos of real places can come later through Materials.

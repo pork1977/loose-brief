@@ -1,4 +1,4 @@
-﻿import type { VisualStyle } from "@/data/demo-directions";
+import type { VisualStyle } from "@/lib/direction";
 import styles from "./CoastlineVisual.module.css";
 
 /*

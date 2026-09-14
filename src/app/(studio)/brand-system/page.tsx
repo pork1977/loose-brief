@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { StageGate } from "@/components/studio/StageGate";
 import { StagePlaceholder } from "@/components/studio/StagePlaceholder";
 
 export const metadata: Metadata = { title: "Brand system" };
 
 export default function BrandSystemPage() {
   return (
+    <StageGate stageId="brand-system">
     <StagePlaceholder
       stageId="brand-system"
       phase={5}
@@ -15,5 +17,6 @@ export default function BrandSystemPage() {
         { title: "Reset", body: "Put everything back to the direction you picked." },
       ]}
     />
+    </StageGate>
   );
 }

@@ -223,6 +223,21 @@ export function summaryLine(brief: BriefDraft): string {
   return first.length > 120 ? `${first.slice(0, 117).trimEnd()}...` : first;
 }
 
+/**
+ * A short fingerprint of a brief (FNV-1a over its JSON, whitespace trimmed).
+ * Directions store the key of the brief they were made from, so the studio can
+ * tell when the brief has changed underneath them.
+ */
+export function briefKey(brief: BriefDraft): string {
+  const json = JSON.stringify(brief, (_, v) => (typeof v === "string" ? v.trim() : v));
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < json.length; i++) {
+    hash ^= json.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(36);
+}
+
 /** How many of the questions have an answer, for the summary's progress line. */
 export function answeredCount(brief: BriefDraft): { answered: number; total: number } {
   const checks = [

@@ -1,0 +1,14 @@
+.outer {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+  transition: opacity var(--ui-motion-fast) var(--ui-ease);
+}

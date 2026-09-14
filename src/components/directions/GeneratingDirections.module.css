@@ -1,0 +1,106 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ui-space-m);
+  max-width: 32rem;
+  margin: var(--ui-space-xl) auto;
+  padding: var(--ui-space-l);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-panel);
+  background: var(--ui-color-surface);
+  box-shadow: var(--ui-shadow-panel);
+  text-align: center;
+}
+
+.title {
+  font-size: var(--ui-text-xl);
+}
+
+/* Three swatches circling, one per direction. Colours come from the directions themselves. */
+.orbit {
+  position: relative;
+  width: 4.5rem;
+  height: 4.5rem;
+}
+.orbit span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: -0.625rem;
+  border-radius: 999px;
+  animation: orbit 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.orbit span:nth-child(2) {
+  animation-delay: -0.8s;
+}
+.orbit span:nth-child(3) {
+  animation-delay: -1.6s;
+}
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg) translateX(1.6rem) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) translateX(0.6rem) scale(0.8);
+  }
+  100% {
+    transform: rotate(360deg) translateX(1.6rem) scale(1);
+  }
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 16rem;
+  text-align: left;
+}
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: var(--ui-text-s);
+  color: var(--ui-color-text-muted);
+  transition: color var(--ui-motion-fast) var(--ui-ease);
+}
+.steps li[data-state="active"] {
+  color: var(--ui-color-text-primary);
+  font-weight: 600;
+}
+.steps li[data-state="done"] {
+  color: var(--ui-color-text-secondary);
+}
+.marker {
+  display: grid;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 1px solid var(--ui-color-border-strong);
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+.steps li[data-state="done"] .marker {
+  border-color: var(--ui-color-success);
+  background: var(--ui-color-success);
+  color: var(--ui-color-surface-raised);
+}
+.steps li[data-state="active"] .marker {
+  border-color: var(--ui-color-accent);
+  border-top-color: transparent;
+  animation: spin 800ms linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.note {
+  font-size: var(--ui-text-xs);
+  color: var(--ui-color-text-secondary);
+}

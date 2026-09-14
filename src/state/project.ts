@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { BRIEF_STEPS, EMPTY_BRIEF, briefDraftSchema, type BriefDraft, type Material } from "@/lib/brief";
+import { directionSetSchema, type Direction } from "@/lib/direction";
+import { withToken } from "@/lib/tokens";
 
 /*
  * Project state: everything about the visitor's current project.
@@ -8,7 +10,17 @@ import { BRIEF_STEPS, EMPTY_BRIEF, briefDraftSchema, type BriefDraft, type Mater
  * in Node. Saving, restoring and the React hook live in project-store.ts.
  */
 
-export const PROJECT_VERSION = 1;
+export const PROJECT_VERSION = 2;
+
+const directionsStateSchema = z.object({
+  /** "demo" for the built-in Ebbfield set, "live" once generation exists. */
+  source: z.enum(["demo", "live"]),
+  /** briefKey() of the brief these were made from. */
+  briefKey: z.string(),
+  createdAt: z.string(),
+  items: directionSetSchema,
+});
+export type DirectionsState = z.infer<typeof directionsStateSchema>;
 
 export const projectSchema = z.object({
   version: z.literal(PROJECT_VERSION),
@@ -19,6 +31,8 @@ export const projectSchema = z.object({
   furthestStep: z.number().int().min(0).max(BRIEF_STEPS.length - 1),
   /** Set when the visitor generates directions from a complete brief. */
   briefSubmittedAt: z.string().nullable(),
+  directions: directionsStateSchema.nullable(),
+  selectedDirectionId: z.string().nullable(),
   updatedAt: z.string().nullable(),
 });
 export type ProjectState = z.infer<typeof projectSchema>;
@@ -29,6 +43,8 @@ export const INITIAL_PROJECT: ProjectState = {
   briefStep: 0,
   furthestStep: 0,
   briefSubmittedAt: null,
+  directions: null,
+  selectedDirectionId: null,
   updatedAt: null,
 };
 
@@ -44,6 +60,9 @@ export type ProjectAction =
   | { type: "material/add"; material: Material }
   | { type: "material/update"; id: string; patch: Partial<Omit<Material, "id">> }
   | { type: "material/remove"; id: string }
+  | { type: "directions/set"; directions: DirectionsState }
+  | { type: "direction/select"; id: string }
+  | { type: "direction/applyTokenFix"; id: string; path: string; value: string }
   | { type: "project/reset" };
 
 export function projectReducer(state: ProjectState, action: ProjectAction, now = new Date().toISOString()): ProjectState {
@@ -66,6 +85,8 @@ export function projectReducer(state: ProjectState, action: ProjectAction, now =
         briefStep: 0,
         furthestStep: lastStep,
         briefSubmittedAt: null,
+        directions: null,
+        selectedDirectionId: null,
       });
 
     case "brief/submit":
@@ -90,9 +111,50 @@ export function projectReducer(state: ProjectState, action: ProjectAction, now =
         brief: { ...state.brief, materials: state.brief.materials.filter((m) => m.id !== action.id) },
       });
 
+    case "directions/set": {
+      // A new set replaces the old one. Keep the selection only if that direction is still in it.
+      const stillThere = action.directions.items.some((d) => d.id === state.selectedDirectionId);
+      return touched({
+        ...state,
+        directions: action.directions,
+        selectedDirectionId: stillThere ? state.selectedDirectionId : null,
+      });
+    }
+
+    case "direction/select":
+      if (!state.directions?.items.some((d) => d.id === action.id)) return state;
+      return touched({ ...state, selectedDirectionId: action.id });
+
+    case "direction/applyTokenFix": {
+      if (!state.directions) return state;
+      let changed = false;
+      const items = state.directions.items.map((d): Direction => {
+        if (d.id !== action.id) return d;
+        try {
+          const tokens = withToken(d.tokens, action.path, action.value);
+          changed = true;
+          return { ...d, tokens };
+        } catch {
+          return d;
+        }
+      });
+      if (!changed) return state;
+      return touched({ ...state, directions: { ...state.directions, items } });
+    }
+
     case "project/reset":
       return { ...INITIAL_PROJECT, updatedAt: now };
   }
+}
+
+/** Earlier saved versions, upgraded one step at a time. */
+function migrate(data: unknown): unknown {
+  if (typeof data !== "object" || data === null) return data;
+  const saved = data as Record<string, unknown>;
+  if (saved.version === 1) {
+    return { ...saved, version: 2, directions: null, selectedDirectionId: null };
+  }
+  return data;
 }
 
 /**
@@ -102,7 +164,7 @@ export function projectReducer(state: ProjectState, action: ProjectAction, now =
 export function restoreProject(raw: string | null): { state: ProjectState; problem: "none" | "empty" | "unreadable" } {
   if (!raw) return { state: INITIAL_PROJECT, problem: "empty" };
   try {
-    const parsed = projectSchema.safeParse(JSON.parse(raw));
+    const parsed = projectSchema.safeParse(migrate(JSON.parse(raw)));
     if (parsed.success) return { state: parsed.data, problem: "none" };
   } catch {
     // Fall through: not JSON.

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { StageGate } from "@/components/studio/StageGate";
 import { StagePlaceholder } from "@/components/studio/StagePlaceholder";
 
 export const metadata: Metadata = { title: "Studio" };
 
 export default function StudioPage() {
   return (
+    <StageGate stageId="studio">
     <StagePlaceholder
       stageId="studio"
       phase={6}
@@ -15,5 +17,6 @@ export default function StudioPage() {
         { title: "Before and after", body: "Compare the site before and after a change." },
       ]}
     />
+    </StageGate>
   );
 }

@@ -1,0 +1,126 @@
+.dialog {
+  width: min(78rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-s);
+  padding: var(--ui-space-s) var(--ui-space-m);
+  border-bottom: 1px solid var(--ui-color-border);
+  background: var(--ui-color-surface-raised);
+}
+.title {
+  font-size: var(--ui-text-l);
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 6.5rem repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid var(--ui-color-border);
+}
+.rowLabel {
+  padding: var(--ui-space-s);
+  font-family: var(--ui-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ui-color-text-secondary);
+}
+.cell {
+  min-width: 0;
+  padding: var(--ui-space-s);
+  border-left: 1px solid var(--ui-color-border);
+}
+
+.headRow {
+  position: sticky;
+  top: 3.6rem;
+  z-index: 1;
+  background: var(--ui-color-surface-raised);
+}
+.columnHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2xs) var(--ui-space-xs);
+  padding: var(--ui-space-s);
+  border-left: 1px solid var(--ui-color-border);
+  font-size: var(--ui-text-s);
+}
+.columnHead > span:nth-child(2) {
+  flex: 1;
+  min-width: 10rem;
+}
+.letter {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 6px;
+  background: var(--ui-color-text-primary);
+  color: var(--ui-color-background);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+}
+.description {
+  display: block;
+  font-size: var(--ui-text-xs);
+  color: var(--ui-color-text-secondary);
+}
+
+.text {
+  font-size: 0.8125rem;
+  color: var(--color-text-primary);
+}
+.imagery {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.thumb {
+  display: flex;
+  align-items: center;
+  flex: none;
+  width: 7rem;
+  aspect-ratio: 16 / 9;
+  padding: 0.25rem;
+  border-radius: var(--radius-small);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+@media (max-width: 40rem) {
+  .row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .rowLabel {
+    grid-column: 1 / -1;
+    padding-bottom: 0;
+  }
+  .rowLabel + .cell,
+  .rowLabel + .columnHead {
+    border-left: 0;
+  }
+  .headRow .rowLabel {
+    display: none;
+  }
+  .imagery {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .thumb {
+    width: 100%;
+  }
+}

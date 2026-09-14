@@ -59,6 +59,14 @@
     padding: 0;
     list-style: none;
   }
+  /*
+   * Component styles often set display (flex, grid), which would otherwise
+   * beat the browser's own [hidden] rule and show hidden content. !important in
+   * a layer wins over normal declarations anywhere, including CSS modules.
+   */
+  [hidden] {
+    display: none !important;
+  }
 }
 
 /* --------------------------------------------------------------- tokens */
@@ -534,6 +542,12 @@
 }
 ::view-transition-new(.page-fade) {
   animation: 260ms ease-out 100ms both lb-fade;
+}
+
+/* Named elements that morph between layouts (the identity canvas, direction previews). */
+::view-transition-group(*) {
+  animation-duration: 550ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Headers stay put while the content beneath them moves. */

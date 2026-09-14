@@ -25,6 +25,9 @@ Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`, `npm test`.
 | `src/lib/brand-fonts.ts` | The curated fonts a brand can use |
 | `src/lib/brief.ts` | The brief schema and the checks for each step |
 | `src/lib/palette.ts` | Colour extraction from uploaded images, run in the browser |
+| `src/lib/direction.ts` | The schema every brand direction has to pass, built-in or generated |
+| `src/lib/accessibility.ts` | WCAG contrast checks on a brand's tokens, and nearest passing colours |
+| `src/components/directions` | Direction cards, the identity canvas and the compare view |
 | `src/state` | Project state: a pure reducer, and a store that saves it in the browser and restores it safely |
 | `src/data/demo-brief.ts` | The Ebbfield demo brief |
 | `src/data/demo-directions.ts` | The three built-in directions for Ebbfield, the fictional demo brand |
