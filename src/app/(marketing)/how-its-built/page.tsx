@@ -53,7 +53,7 @@ const CONTENTS = [
   ["live", "Live mode"],
   ["exports", "Exports"],
   ["stack", "Stack and tests"],
-  ["next", "What's next"],
+  ["next", "Try it"],
 ] as const;
 
 export default function HowItsBuiltPage() {
@@ -104,8 +104,9 @@ export default function HowItsBuiltPage() {
                 <div className={styles.fact}>
                   <h3>Nothing is stored on a server</h3>
                   <p>
-                    Your project is saved in your browser, and the downloads are made there. In live mode your brief, and any image you choose
-                    to share, goes to Anthropic to get Claude&rsquo;s reply. Loose Brief doesn&rsquo;t keep a copy.
+                    Your project is saved in your browser, and the downloads are made there. In live mode your brief, and any image or PDF you
+                    choose to share, goes to Anthropic to get Claude&rsquo;s reply. If you give your current website, the server reads its front page
+                    for Claude. Loose Brief doesn&rsquo;t keep a copy of any of it.
                   </p>
                 </div>
               </div>
@@ -278,10 +279,10 @@ export default function HowItsBuiltPage() {
               </ul>
             </Section>
 
-            <Section id="next" title="What's next">
+            <Section id="next" title="Try it">
               <p>
-                Letting Claude read more of what people already have: PDFs such as existing brand guidelines, and copy pasted from an old
-                website. Then making the site easier to find in search engines and AI assistants.
+                The demo shows the whole journey with Ebbfield. With live mode on, write a brief for a business of your own, add what it already
+                has (a logo, brand colours, an existing website or a PDF of its guidelines), and Claude builds the directions around them.
               </p>
               <div className={styles.cta}>
                 <TryDemoButton className="ui-button ui-button--primary" />

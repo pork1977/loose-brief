@@ -124,8 +124,8 @@ request > classify (strategy / tokens / copy / section / whole site / imagery / 
 - `POST /api/directions` (brief in, three directions plus homepage copy out) and `POST /api/refine` (current state plus request in, change object out).
 - Separate Anthropic key with its own spend limit, set up the way the personal site's key was.
 - Per IP rate limit plus a daily ceiling. These live in memory on each serverless instance, so the only hard ceiling is the console spend limit.
-- Default model `claude-opus-5`, overridable with an env var. Usage logged on every call.
-- The cost per brief will be measured when it's built, before anything goes public.
+- Default model `claude-sonnet-5` (started on `claude-opus-5`; switched after measuring), overridable with an env var. Usage logged on every call.
+- Measured cost per brief: about $0.16 on Sonnet 5, $0.40 on Opus 5. See Phase 10.
 
 ---
 
@@ -136,7 +136,7 @@ These are the places where following the spec to the letter would work against t
 1. **Human photography for the Shared Shore direction.** The brief says to avoid corporate stock photography, and there's no image generation in the stack. Proposal: every direction's imagery is drawn in code (SVG contour lines, grain, duotone shapes coloured by the tokens), which also means imagery changes when tokens change. If Shared Shore still needs photos, a handful of free licence photos with a token driven duotone treatment could be added later. Your call when we reach Phase 4.
 2. **Logo directions.** They appear in the product pitch but not in the workflow, and the spec also warns against "generating a random logo and calling it a brand identity". Proposal: a wordmark set in the display typeface plus a simple monogram, both built from tokens. No logo generator.
 3. **Uploaded logo or image in the brief.** Superseded by the Materials feature below. Colour reading happens in the browser; sending a file to the model is opt-in per file and arrives with live mode.
-4. **Required pages.** The brief collects them, but the MVP builds one homepage, as the spec says. Nav links for the other pages will say they aren't generated in this version, not lead to empty pages.
+4. **Required pages.** The brief collects them, but the MVP builds one homepage, as the spec says. The homepage's navigation links jump to its own sections rather than to pages that don't exist.
 5. **PDF export.** Brand guidelines export as HTML with a proper print stylesheet, so "Save as PDF" in the browser gives a clean PDF. No PDF library.
 6. **Every export works.** All of them are built from data the project already has, in the browser, so there are no placeholder cards.
 7. **Copy.** The spec's sample text includes em dashes, a "not by X, but by Y" line and citation markers ([18][20]) left over from wherever it was drafted. All published copy will be written in your voice, and the final portfolio line reworded before it goes anywhere.
@@ -158,10 +158,11 @@ Each phase ends with the dev server running, the change checked in the browser, 
 | 7 | Refinement engine | Done 2026-09-14. Creative Director panel in the Studio, labelled as built-in rules rather than AI. Twelve rules (the spec's nine plus human, confident tone and government clients), matched by weighted key phrases, each planning concrete changes against the brand as it is now. Replies are structured (change type, summary, reasoning, affected areas, every before and after, a JSON view) and dry-run through the same validation as the editor. Pending suggestions preview on the page and in before and after; Apply goes into the undoable history; the panel shows Undo, Redo and cancelled states. Unmatched requests say so. New "simplified mobile layout" website setting. Project state v5 |
 | 8 | Export | Done 2026-09-14. The homepage downloads as a static site (index.html, styles.css with the tokens at the top, a small dependency-free site.js for the menu, form, reveal and coastline explorer, and a README). It is rendered by the same Website component the Studio shows, styled by the same stylesheet (moved out of CSS modules into one shared string so the two can't drift), and the explorer's frames are precomputed into the page. Also CSS variables, W3C token JSON, a Tailwind v4 theme, DESIGN.md, brand guidelines HTML with a print stylesheet for PDF, a copy deck, site content JSON and two social cards drawn on canvas (1200x630, 1080x1080). Every file can be downloaded on its own or in one zip; text files can be copied and looked inside. All made in the browser, nothing uploaded. `npx tsx scripts/write-demo-export.tsx <folder>` writes the demo export to disk for checking. **Loose Brief will never host sites** (Paul, 2026-09-14): it is a design tool, and everything leaves as an export |
 | 9 | Polish | Done 2026-09-14. Paul had no rough edges left to list, so the flow pass was a walk through the demo at desktop and phone widths. Fixes: "Try the demo" on the landing page goes straight to the three directions; a finished brief offers Generate directions from any step instead of five clicks of Next; a Project menu on every stage shows whether the project is saved and offers Restart the demo and Start over (one shared helper, which also clears stored images); a short demo tour on each stage, hideable and brought back from the Project menu; on phones the stage bar scrolls to the current stage, the Studio opens in its mobile frame and a link jumps down to the Creative Director. States: loading skeletons, error pages for the stages and marketing pages, a global error page, a 404, errors shown if an export or copy fails, and the "saved project couldn't be read" notice on every stage. Keyboard, focus and reduced motion were already covered and checked again. "How it's built" written, with its code, contrast and Creative Director examples produced by the app's own code at build time |
-| 10 | Live mode | Done 2026-09-14, tested against the real API. Measured on Opus 5: a brief costs about $0.40 and takes 60 to 80 seconds (7 requests: plan, then a brand request and a words request per direction, because a whole direction is too complex for one structured reply); a shared image adds under a cent; a Creative Director request the rules don't match takes about 5 seconds and 3 cents. Output is about 60% of the cost, cache writes most of the rest. Found and fixed in real runs: the grammar size limit, parallel requests all writing the cache (A now goes first), Claude calling a real business "fictional" and inventing opening hours, Ebbfield's coastline labels on generated heroes, and `img.decode()` hanging while the tab is hidden. `POST /api/directions` plans three routes with Claude then writes all three in parallel, streaming progress as JSON lines; Claude fills a smaller draft shape (`lib/live/draft.ts`) and the app does the mechanical parts (ids, the second colour mode, contrast repair, line heights, radius, spacing, shadow and motion from presets) before the strict direction schema; a failing direction is re-asked once with its problems listed. `POST /api/refine` handles Creative Director requests the rules don't match, returning changes that go through `applyBrandChanges` (bad paths are named back to Claude once). `GET /api/live` tells the interface whether a key is set, so without one everything behaves as before. Prompt caching on the system prompt and brief, per-IP and daily limits (in memory, env-overridable), usage logged per call, Sonnet 5 by default since 2026-09-14 at Paul's request, about $0.16 and 57s per brief (`LIVE_MODEL`). Materials: the colours read in the browser always go in the brief; images go only with a per-file "Let Claude look at this" tick (up to four, scaled to 1024px). Generated sites hide the Ebbfield coastline explorer, and Claude writes figures, partners and quotes as marked examples. `LIVE_FAKE=1` replays the demo with delays for local UI work (ignored in production). PDFs, pasted copy and fetching a current site URL are not done |
-| 11 | Search and AI visibility | SEO, AEO and GEO, modelled on Rival Radar (see below) |
-| 12 | Ship | Vercel project `loose-brief`, Paul's domain, README, add to pwilson.dev, then Google Search Console and Bing Webmaster Tools (Paul) |
-| 13 | Payments (maybe) | Only if live mode output is good enough to charge for. See "Payments" below |
+| 10 | Live mode | Done 2026-09-14, tested against the real API. Measured on Opus 5: a brief costs about $0.40 and takes 60 to 80 seconds (7 requests: plan, then a brand request and a words request per direction, because a whole direction is too complex for one structured reply); a shared image adds under a cent; a Creative Director request the rules don't match takes about 5 seconds and 3 cents. Output is about 60% of the cost, cache writes most of the rest. Found and fixed in real runs: the grammar size limit, parallel requests all writing the cache (A now goes first), Claude calling a real business "fictional" and inventing opening hours, Ebbfield's coastline labels on generated heroes, and `img.decode()` hanging while the tab is hidden. `POST /api/directions` plans three routes with Claude then writes all three in parallel, streaming progress as JSON lines; Claude fills a smaller draft shape (`lib/live/draft.ts`) and the app does the mechanical parts (ids, the second colour mode, contrast repair, line heights, radius, spacing, shadow and motion from presets) before the strict direction schema; a failing direction is re-asked once with its problems listed. `POST /api/refine` handles Creative Director requests the rules don't match, returning changes that go through `applyBrandChanges` (bad paths are named back to Claude once). `GET /api/live` tells the interface whether a key is set, so without one everything behaves as before. Prompt caching on the system prompt and brief, per-IP and daily limits (in memory, env-overridable), usage logged per call, Sonnet 5 by default since 2026-09-14 at Paul's request, about $0.16 and 57s per brief (`LIVE_MODEL`). Materials: the colours read in the browser always go in the brief; images go only with a per-file "Let Claude look at this" tick (up to four, scaled to 1024px). Generated sites hide the Ebbfield coastline explorer, and Claude writes figures, partners and quotes as marked examples. `LIVE_FAKE=1` replays the demo with delays for local UI work (ignored in production). PDFs, pasted copy and the current website were added afterwards (see Materials) |
+| 10b | Finishing touches | Done 2026-09-14. Illustrations built from a library of 47 drawn shapes that Claude picks per brief (editable in the Imagery tab). "Show it on the site" images now appear in the navigation and hero, including in the download. The rest of Materials: typed brand colours, pasted copy, PDFs shared with Claude, and the current website read on the server with checks against private addresses |
+| 11 | Search and AI visibility | Dropped 2026-09-14. Loose Brief stays a portfolio piece rather than a product people are marketed to, so search work isn't worth it |
+| 12 | Ship | A domain so it can sit on pwilson.dev alongside the other projects. The repo is public |
+| 13 | Payments | Dropped 2026-09-14, for the same reason as Phase 11 |
 
 ## Materials: building the brand around what people upload
 
@@ -169,7 +170,7 @@ Paul's idea (2026-09-13): let people add things they already have and use them t
 
 **Phase 3 (built):** images only, read entirely in the browser. For each file Loose Brief pulls out the main colours (k-means clustering in OKLab), the exact colours written into SVG files, and plain traits (light or dark, muted or vivid, warm or cool). Each file gets a type (logo, photo, texture, screenshot), a choice between "show it on the site" and "inspiration only", "keep these colours exactly" for logos, and alt text. Files are stored in IndexedDB and never uploaded. The summary shows "colours to keep" and "colours to draw from".
 
-**Phase 10 (with live mode):** Claude reads images and PDFs directly, so no separate image model is needed. Each analysis is opt-in per file, because it means sending the file to Anthropic.
+**Phase 10 (built):** Claude reads images and PDFs directly, so no separate image model is needed. Each file is sent only if the visitor ticks it, because it means sending the file to Anthropic. The verdicts below were the plan; everything marked Yes was built.
 
 | Input | What we'd get from it | Verdict |
 | --- | --- | --- |
@@ -180,45 +181,19 @@ Paul's idea (2026-09-13): let people add things they already have and use them t
 | Existing copy (pasted text) | Tone of voice reading, words they use, reading level | Yes, cheap and useful |
 | Their current website address | Colours, fonts and copy tone from the live page, fetched on the server | Yes, but needs care: server-side fetching of any URL has to be locked down so it can't be pointed at internal addresses |
 | Brand colours they must keep (typed hex values) | Hard constraints for the palette | Yes, trivial |
-| Font files they own | Use in the preview only; can't be exported unless their licence allows it | Later, licensing makes it fiddly |
+| Font files they own | Use in the preview only; can't be exported unless their licence allows it | Not built: licensing makes it fiddly |
 | Video | A few frames analysed as images | No. Costly, and frames add little over a photo |
 | Audio or music | Nothing that maps onto a visual identity | No |
 | Social media profile links | Would mean scraping sites whose terms forbid it | No. Screenshots do the same job |
 
 Things to keep in mind: people's photos may show other people, so uploads sent to the model should be deleted straight after analysis; the per-file consent needs to be clear; and every direction should say what it drew from ("navy from your logo, warm light from the harbour photo"), which is also the spec's "show me why".
 
-## Search and AI visibility (Phase 11)
+## Not pursued
 
-Paul wants this fully SEO, AEO and GEO ready, following Rival Radar. Rival Radar has, and this should get:
+Two later phases were planned and then dropped on 2026-09-14, when Paul decided Loose Brief would stay a portfolio piece rather than become a product he promotes and supports:
 
-- `robots.ts` allowing crawlers (AI ones included) and blocking private routes. Here that's the studio stages, which hold no content, plus `/api/`.
-- `sitemap.ts` covering only the public pages.
-- `llms.txt` and `llms-full.txt` in `public/`, plus `.well-known/ai.txt`.
-- An IndexNow key file and a `submit-indexnow` script for Bing.
-- JSON-LD: Organization, WebSite and SoftwareApplication on the home page, HowTo for the five stages, BreadcrumbList and Article on content pages. FAQPage only if there's a real FAQ to back it.
-- Open Graph images per page.
-- Canonicals and per-page titles and descriptions.
-- A small guides section with genuinely useful articles (for example "What are design tokens?", "How to write a brand brief", "Choosing accessible brand colours"), since content is what answer engines quote. Rival Radar has ten.
-- Privacy, terms and contact pages, which are needed anyway once there's live AI and file uploads.
-
-Paul adds the site to Google Search Console and Bing Webmaster Tools once it's live.
-
-## Payments (Phase 13, undecided)
-
-Paul may add a cheap one-off payment to cover AI costs, and is unsure what a buyer would get or whether the output is accurate enough to charge for. The answer to the second question comes from live mode, so nothing here gets built before that.
-
-Suggested shape, for discussion:
-
-- **Free:** the Ebbfield demo end to end, writing a brief, colour reading from uploads. This is the proof of quality.
-- **Paid, once per brand:** generating three directions from their own brief (with image and PDF analysis), a few regenerations, a set number of Creative Director requests, and the full export: tokens, Tailwind theme, DESIGN.md, brand guidelines, social cards and the homepage as downloadable code.
-- **Price:** somewhere around £9 to £19. Card fees take a fixed amount per payment (Stripe's UK rate is roughly 1.5% plus 20p, worth checking on their pricing page), so very low prices lose a big share to fees. The real cost per brand has to be measured in Phase 10 first; the price should cover it several times over, since some people will regenerate a lot.
-
-What it drags in, which is more than the payment itself:
-
-- A way back to a paid project: at least an email and a magic link, which means storing projects on a server (Supabase, as on Rival Radar) rather than only in the browser.
-- VAT on digital sales, including to EU customers. A merchant of record such as Paddle or Lemon Squeezy handles that for a higher fee (around 5% plus 50c); plain Stripe leaves it to you.
-- UK consumer rules for digital content: the 14-day cancellation right only falls away if the buyer explicitly agrees to immediate delivery at checkout.
-- Terms, a privacy policy, and a refund approach for output someone thinks is poor.
+- **Search and AI visibility**: robots and sitemap files, llms.txt, structured data, social images and a guides section, following Rival Radar.
+- **Payments**: a cheap one-off payment per brand to cover the AI cost, which would also have meant accounts, server storage, VAT and terms.
 
 ## Definition of done
 
@@ -237,8 +212,8 @@ A visitor can:
 11. Export the tokens or the brand summary.
 12. Understand how it's built from the project page.
 
-## Still open
+## Where things ended up
 
-- Repo: **private** GitHub repo `loose-brief` (decided 2026-09-13, reversing the earlier public plan) because paid features may be added. Keys still stay in `.env.local`, which is gitignored.
-- Hosting: a Vercel project called `loose-brief` at ship time. Paul picks and connects the domain.
+- Repo: public on GitHub. It was private while payments were a possibility, and made public once they were dropped. Keys stay in `.env.local`, which is gitignored; `.env.example` lists what's needed.
+- Hosting: a domain so it can be linked from pwilson.dev. Live mode only works where an Anthropic key is set.
 - Photos for Shared Shore: decided at Phase 4 to use drawn imagery like the other two directions, since the brief rules out stock photography. Real photos of real places can come later through Materials.
