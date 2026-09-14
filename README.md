@@ -31,7 +31,12 @@ Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`, `npm test`.
 | `src/lib/color-modes.ts` | Deriving a dark colour set from a light one (and back), and the contrast control |
 | `src/lib/token-registry.ts` | What every token is for and which parts of the site use it |
 | `src/lib/health.ts` | The identity health checks |
-| `src/lib/exporters.ts` | CSS variables and W3C design token JSON |
+| `src/lib/exporters.ts` | CSS variables, W3C design token JSON and the Tailwind v4 theme |
+| `src/lib/export` | The downloads: static site, site.js, documents, social cards and zips |
+| `src/components/export` | The Export page |
+| `src/components/website/site-css.ts` | The homepage stylesheet, shared by the Studio preview and the downloaded site |
+| `src/lib/coastline.ts` | The illustrative coastline data and the frame for any year |
+| `scripts/write-demo-export.tsx` | Writes the demo brand's full export to a folder, for checking outside the app |
 | `src/components/brand-system` | The brand system editor: tabs, controls and live preview |
 | `src/lib/website.ts` | The homepage as data: section schema, order and limits |
 | `src/components/website` | The generated homepage, rendered only from brand tokens, and the coastline explorer |

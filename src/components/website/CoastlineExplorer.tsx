@@ -1,89 +1,35 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { COAST, CONTOUR_OFFSETS, coastlineFrame } from "@/lib/coastline";
 import type { VisualStyle } from "@/lib/direction";
 import { useWebsiteFrame } from "./WebsiteContext";
-import styles from "./CoastlineExplorer.module.css";
+import { siteClasses } from "./site-classes";
+
+const styles = siteClasses("wx");
 
 /*
  * An interactive, illustrative coastline: a year slider moves the shoreline
  * between hand-drawn positions for 2000, 2025 and a projection for 2050, and
  * four sites report how far the shore has moved. None of it is real data, and
- * the component says so on screen.
+ * the component says so on screen. The shapes come from lib/coastline.ts.
  *
  * Every colour comes from brand tokens. The drawing changes character with the
  * direction's illustration style (fine contours, a data grid, or soft shapes).
  * The site list doubles as the legend and the keyboard route, so the map
  * itself stays out of the tab order.
+ *
+ * data-wx attributes are hooks for the downloaded site's script, which does
+ * the same job without React.
  */
-
-const WIDTH = 800;
-const HEIGHT = 440;
-const Y = [0, 55, 110, 165, 220, 275, 330, 385, 440];
-const SHORE: Record<2000 | 2025 | 2050, number[]> = {
-  2000: [360, 345, 372, 352, 380, 362, 388, 372, 392],
-  2025: [348, 318, 356, 318, 372, 332, 380, 360, 386],
-  2050: [332, 280, 338, 270, 362, 292, 370, 344, 378],
-};
-const METRES_PER_UNIT = 2;
-const FIRST_YEAR = 2000;
-const LAST_YEAR = 2050;
-const MEASURED_UNTIL = 2025;
-
-const SITES = [
-  { id: "north-spit", name: "North Spit", index: 1 },
-  { id: "saltings", name: "The Saltings", index: 3 },
-  { id: "harbour-wall", name: "Harbour Wall", index: 4 },
-  { id: "cliff-path", name: "Cliff Path", index: 5 },
-] as const;
-
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
-function shoreAt(year: number): number[] {
-  if (year <= MEASURED_UNTIL) {
-    const t = (year - FIRST_YEAR) / (MEASURED_UNTIL - FIRST_YEAR);
-    return SHORE[2000].map((x, i) => lerp(x, SHORE[2025][i], t));
-  }
-  const t = (year - MEASURED_UNTIL) / (LAST_YEAR - MEASURED_UNTIL);
-  return SHORE[2025].map((x, i) => lerp(x, SHORE[2050][i], t));
-}
-
-type Point = readonly [number, number];
-
-/** Cubic Bezier segments for a smooth curve through the points (Catmull-Rom). */
-function segments(pts: Point[]): string {
-  let d = "";
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[Math.max(0, i - 1)];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[Math.min(pts.length - 1, i + 2)];
-    d += ` C ${p1[0] + (p2[0] - p0[0]) / 6} ${p1[1] + (p2[1] - p0[1]) / 6}, ${p2[0] - (p3[0] - p1[0]) / 6} ${p2[1] - (p3[1] - p1[1]) / 6}, ${p2[0]} ${p2[1]}`;
-  }
-  return d;
-}
-
-const points = (xs: number[], offset = 0): Point[] => xs.map((x, i) => [x + offset, Y[i]] as const);
-
-/** A smooth shoreline, optionally shifted out to sea. */
-function smooth(xs: number[], offset = 0): string {
-  const pts = points(xs, offset);
-  return `M ${pts[0][0]} ${pts[0][1]}${segments(pts)}`;
-}
-
-/** The same curve drawn bottom to top, for closing a filled shape back along it. */
-const smoothReversed = (xs: number[]) => segments(points(xs).reverse());
-const movedBy = (year: number, index: number) => Math.round((SHORE[2000][index] - shoreAt(year)[index]) * METRES_PER_UNIT);
-
 export function CoastlineExplorer({ visual, title }: { visual: VisualStyle; title: string }) {
   const { interactive } = useWebsiteFrame();
-  const ids = useId().replace(/:/g, "");
-  const [year, setYear] = useState(interactive ? MEASURED_UNTIL : LAST_YEAR);
+  const ids = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const [year, setYear] = useState<number>(interactive ? COAST.measuredUntil : COAST.lastYear);
   const [siteId, setSiteId] = useState<string>("saltings");
   const [playing, setPlaying] = useState(false);
   const frame = useRef<number | null>(null);
-
-  const playFrom = useRef(FIRST_YEAR);
+  const playFrom = useRef<number>(COAST.firstYear);
 
   const togglePlay = () => {
     if (playing) {
@@ -92,10 +38,10 @@ export function CoastlineExplorer({ visual, title }: { visual: VisualStyle; titl
     }
     // With reduced motion, skip the sweep and show where it ends.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setYear(LAST_YEAR);
+      setYear(COAST.lastYear);
       return;
     }
-    playFrom.current = year >= LAST_YEAR ? FIRST_YEAR : year;
+    playFrom.current = year >= COAST.lastYear ? COAST.firstYear : year;
     setPlaying(true);
   };
 
@@ -105,9 +51,9 @@ export function CoastlineExplorer({ visual, title }: { visual: VisualStyle; titl
     const start = performance.now();
     const from = playFrom.current;
     const tick = (now: number) => {
-      const next = Math.min(LAST_YEAR, from + ((now - start) / 5000) * (LAST_YEAR - FIRST_YEAR));
+      const next = Math.min(COAST.lastYear, from + ((now - start) / 5000) * (COAST.lastYear - COAST.firstYear));
       setYear(Math.round(next));
-      if (next < LAST_YEAR) frame.current = requestAnimationFrame(tick);
+      if (next < COAST.lastYear) frame.current = requestAnimationFrame(tick);
       else setPlaying(false);
     };
     frame.current = requestAnimationFrame(tick);
@@ -116,16 +62,13 @@ export function CoastlineExplorer({ visual, title }: { visual: VisualStyle; titl
     };
   }, [playing]);
 
-  const shore = shoreAt(year);
-  const projected = year > MEASURED_UNTIL;
-  const site = SITES.find((s) => s.id === siteId) ?? SITES[0];
-  const moved = movedBy(year, site.index);
-  const rate = year > FIRST_YEAR ? (moved / (year - FIRST_YEAR)).toFixed(1) : "0.0";
+  const f = coastlineFrame(year);
+  const site = f.sites.find((s) => s.id === siteId) ?? f.sites[0];
 
   return (
-    <figure className={styles.explorer} data-visual={visual}>
+    <figure className={styles.explorer} data-visual={visual} data-wx="explorer">
       <div className={styles.mapWrap}>
-        <svg className={styles.map} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <svg className={styles.map} viewBox={`0 0 ${COAST.width} ${COAST.height}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
           <defs>
             <pattern id={`${ids}-grid`} width="40" height="40" patternUnits="userSpaceOnUse">
               <path d="M40 0H0V40" className={styles.gridLine} />
@@ -139,41 +82,40 @@ export function CoastlineExplorer({ visual, title }: { visual: VisualStyle; titl
             </filter>
           </defs>
 
-          <rect width={WIDTH} height={HEIGHT} className={styles.sea} />
-          {visual === "grid" ? <rect width={WIDTH} height={HEIGHT} fill={`url(#${ids}-grid)`} /> : null}
+          <rect width={COAST.width} height={COAST.height} className={styles.sea} />
+          {visual === "grid" ? <rect width={COAST.width} height={COAST.height} fill={`url(#${ids}-grid)`} /> : null}
 
           {/* Offshore contours follow the current shoreline. */}
-          {[36, 84, 150, 240].map((offset, i) => (
-            <path key={offset} d={smooth(shore, offset)} className={styles.contour} style={{ opacity: 0.5 - i * 0.1 }} />
+          {CONTOUR_OFFSETS.map((offset, i) => (
+            <path key={offset} d={f.contours[i]} className={styles.contour} style={{ opacity: Math.round((0.5 - i * 0.1) * 100) / 100 }} data-wx={`contour-${i}`} />
           ))}
 
           {/* Land lost since 2000, hatched between the old and current shore. */}
-          <path d={`${smooth(SHORE[2000])}${smoothReversed(shore)} Z`} fill={`url(#${ids}-hatch)`} className={styles.lost} />
+          <path d={f.lost} fill={`url(#${ids}-hatch)`} className={styles.lost} data-wx="lost" />
+          <path d={f.land} className={styles.land} data-wx="land" />
+          <path d={f.oldShore} className={styles.oldShore} />
+          <path d={f.shore} className={styles.shore} data-wx="shore" />
+          <path d={f.tide} className={styles.tide} data-wx="tide" />
 
-          <path d={`${smooth(shore)} L 0 ${HEIGHT} L 0 0 Z`} className={styles.land} />
-          <path d={smooth(SHORE[2000])} className={styles.oldShore} />
-          <path d={smooth(shore)} className={styles.shore} />
-          <path d={smooth(shore, 10)} className={styles.tide} />
-
-          {SITES.map((s) => {
-            const x = shore[s.index];
-            const y = Y[s.index];
+          {f.sites.map((s) => {
             const active = s.id === site.id;
             return (
-              <g key={s.id} className={styles.site} data-active={active} onClick={() => interactive && setSiteId(s.id)}>
-                {active ? <circle cx={x} cy={y} r="18" className={styles.pulse} /> : null}
-                <circle cx={x} cy={y} r={active ? 8 : 6} className={styles.dot} />
-                <text x={x + 16} y={y + 5} className={styles.siteLabel}>
+              <g key={s.id} className={styles.site} data-active={active} data-wx-site={s.id} onClick={() => interactive && setSiteId(s.id)}>
+                <circle cx={s.x} cy={s.y} r="18" className={styles.pulse} />
+                <circle cx={s.x} cy={s.y} r={active ? 8 : 6} className={styles.dot} />
+                <text x={s.x + 16} y={s.y + 5} className={styles.siteLabel}>
                   {s.name}
                 </text>
               </g>
             );
           })}
 
-          <rect width={WIDTH} height={HEIGHT} filter={`url(#${ids}-grain)`} className={styles.grain} />
+          <rect width={COAST.width} height={COAST.height} filter={`url(#${ids}-grain)`} className={styles.grain} />
         </svg>
 
-        <span className={styles.badge}>{projected ? `Projection · ${year}` : `${year}`}</span>
+        <span className={styles.badge} data-wx="badge">
+          {f.projected ? `Projection · ${year}` : `${year}`}
+        </span>
         <span className={styles.illustrative}>Illustrative data</span>
       </div>
 
@@ -184,70 +126,79 @@ export function CoastlineExplorer({ visual, title }: { visual: VisualStyle; titl
             className={styles.play}
             onClick={togglePlay}
             aria-label={playing ? "Pause" : "Play through the years"}
+            data-wx="play"
           >
-            {playing ? (
-              <svg viewBox="0 0 16 16" aria-hidden="true">
-                <rect x="3" y="2.5" width="3.5" height="11" rx="1" />
-                <rect x="9.5" y="2.5" width="3.5" height="11" rx="1" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 16 16" aria-hidden="true">
+            <svg viewBox="0 0 16 16" aria-hidden="true" data-wx="play-icon">
+              {playing ? (
+                <>
+                  <rect x="3" y="2.5" width="3.5" height="11" rx="1" />
+                  <rect x="9.5" y="2.5" width="3.5" height="11" rx="1" />
+                </>
+              ) : (
                 <path d="M4 2.5v11l9-5.5-9-5.5Z" />
-              </svg>
-            )}
+              )}
+            </svg>
           </button>
           <label className={styles.slider}>
             <span className={styles.sliderLabel}>
-              Year <strong>{year}</strong>
-              {projected ? <em> (projected)</em> : null}
+              Year <strong data-wx="year">{year}</strong>
+              <em data-wx="projected" hidden={!f.projected}>
+                {" "}
+                (projected)
+              </em>
             </span>
             <input
               type="range"
-              min={FIRST_YEAR}
-              max={LAST_YEAR}
+              min={COAST.firstYear}
+              max={COAST.lastYear}
               step={1}
               value={year}
+              data-wx="slider"
               onChange={(e) => {
                 setPlaying(false);
                 setYear(Number(e.target.value));
               }}
-              aria-valuetext={`${year}${projected ? ", projected" : ""}`}
+              aria-valuetext={`${year}${f.projected ? ", projected" : ""}`}
             />
             <span className={styles.scale} aria-hidden="true">
-              <span>{FIRST_YEAR}</span>
-              <span>{MEASURED_UNTIL}</span>
-              <span>{LAST_YEAR}</span>
+              <span>{COAST.firstYear}</span>
+              <span>{COAST.measuredUntil}</span>
+              <span>{COAST.lastYear}</span>
             </span>
           </label>
         </div>
 
         <div className={styles.readout} aria-live="polite">
-          <p className={styles.readoutName}>{site.name}</p>
-          <p className={styles.readoutValue}>
-            {moved} m
+          <p className={styles.readoutName} data-wx="readout-name">
+            {site.name}
           </p>
-          <p className={styles.readoutText}>
-            of shoreline lost since 2000{year > FIRST_YEAR ? `, about ${rate} m a year` : ""}.
+          <p className={styles.readoutValue}>
+            <span data-wx="readout-value">{site.moved}</span> m
+          </p>
+          <p className={styles.readoutText} data-wx="readout-text">
+            of shoreline lost since 2000{year > COAST.firstYear ? `, about ${site.rate} m a year` : ""}.
           </p>
         </div>
 
         <ul className={styles.sites} aria-label="Sites">
-          {SITES.map((s) => (
+          {f.sites.map((s) => (
             <li key={s.id}>
-              <button type="button" className={styles.siteButton} aria-pressed={s.id === site.id} onClick={() => setSiteId(s.id)}>
+              <button type="button" className={styles.siteButton} aria-pressed={s.id === site.id} onClick={() => setSiteId(s.id)} data-wx-site-button={s.id}>
                 <span>{s.name}</span>
-                <span className={styles.siteValue}>{movedBy(year, s.index)} m</span>
+                <span className={styles.siteValue} data-wx-site-value={s.id}>
+                  {s.moved} m
+                </span>
               </button>
             </li>
           ))}
         </ul>
       </div>
 
-      <figcaption className="visually-hidden">
+      <figcaption className="visually-hidden" data-wx="caption">
         {title}. Illustrative map of a coastline in {year}
-        {projected ? " (projected)" : ""}. Shoreline lost since 2000:{" "}
-        {SITES.map((s) => `${s.name} ${movedBy(year, s.index)} metres`).join(", ")}.
+        {f.projected ? " (projected)" : ""}. Shoreline lost since 2000: {f.sites.map((s) => `${s.name} ${s.moved} metres`).join(", ")}.
       </figcaption>
     </figure>
   );
 }
+

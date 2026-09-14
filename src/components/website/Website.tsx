@@ -7,7 +7,9 @@ import { navTarget, type Section, type SectionOf } from "@/lib/website";
 import { CoastlineExplorer } from "./CoastlineExplorer";
 import { Reveal } from "./Reveal";
 import { useWebsiteFrame, type SiteTarget } from "./WebsiteContext";
-import styles from "./Website.module.css";
+import { SiteStyles, siteClasses } from "./site-classes";
+
+const styles = siteClasses("ws");
 
 /*
  * The generated homepage: navigation, hero, then the direction's website
@@ -22,8 +24,15 @@ import styles from "./Website.module.css";
  */
 export function Website({ brandName, direction }: { brandName: string; direction: Direction }) {
   const { website } = direction;
+  const { exporting } = useWebsiteFrame();
   return (
-    <div className={styles.site} data-mobile-simple={website.layout.mobileSimplified} data-tokens="--color-background --font-body">
+    <div
+      className={styles.site}
+      id={exporting ? "top" : undefined}
+      data-mobile-simple={website.layout.mobileSimplified}
+      data-tokens="--color-background --font-body"
+    >
+      {exporting ? null : <SiteStyles />}
       <Nav brandName={brandName} direction={direction} />
       <main>
         <Hero direction={direction} />
@@ -34,6 +43,20 @@ export function Website({ brandName, direction }: { brandName: string; direction
 }
 
 function SectionView({ section, direction, brandName }: { section: Section; direction: Direction; brandName: string }) {
+  const { exporting } = useWebsiteFrame();
+  // Exported pages link to sections by id; in the Studio, links scroll the frame instead, and two
+  // previews side by side would otherwise repeat the same ids.
+  if (exporting) {
+    return (
+      <div id={section.type} className={styles.anchor}>
+        <SectionBody section={section} direction={direction} brandName={brandName} />
+      </div>
+    );
+  }
+  return <SectionBody section={section} direction={direction} brandName={brandName} />;
+}
+
+function SectionBody({ section, direction, brandName }: { section: Section; direction: Direction; brandName: string }) {
   switch (section.type) {
     case "credibility":
       return <Credibility section={section} />;
@@ -57,7 +80,15 @@ function SectionView({ section, direction, brandName }: { section: Section; dire
 /* ------------------------------------------------------------------ links */
 
 function SiteLink({ to, className, children, tokens, onNavigate }: { to: SiteTarget; className?: string; children: ReactNode; tokens?: string; onNavigate?: () => void }) {
-  const { interactive, goTo } = useWebsiteFrame();
+  const { interactive, exporting, goTo } = useWebsiteFrame();
+  if (exporting) {
+    // A plain in-page link; the exported stylesheet handles smooth scrolling and the sticky nav offset.
+    return (
+      <a href={`#${to}`} className={className} data-ws-link="">
+        {children}
+      </a>
+    );
+  }
   return (
     <a
       href={`#${to}`}
@@ -121,6 +152,7 @@ function Nav({ brandName, direction }: { brandName: string; direction: Direction
           className={styles.menuButton}
           aria-expanded={open}
           aria-controls={menuId}
+          data-ws="menu-button"
           tabIndex={interactive ? undefined : -1}
           onClick={() => setOpen((o) => !o)}
           data-tokens="--color-border --radius-button"
@@ -329,8 +361,52 @@ function Impact({ section }: { section: SectionOf<"impact"> }) {
 }
 
 function Cta({ section, direction }: { section: SectionOf<"cta">; direction: Direction }) {
-  const { interactive } = useWebsiteFrame();
+  const { interactive, exporting } = useWebsiteFrame();
   const id = useId();
+  if (exporting) return <ExportedCta section={section} direction={direction} />;
+  return <LiveCta section={section} direction={direction} interactive={interactive} id={id} />;
+}
+
+/*
+ * The downloaded site's form: the same markup, with the error and thank-you
+ * messages already in the page (hidden) for its script to reveal. It doesn't
+ * send anywhere; the README in the download explains how to connect it.
+ */
+function ExportedCta({ section, direction }: { section: SectionOf<"cta">; direction: Direction }) {
+  const id = useId();
+  return (
+    <section className={`${styles.section} ${styles.cta}`} data-section="cta" aria-labelledby={id}>
+      <Reveal className={styles.ctaInner}>
+        <p className={styles.eyebrow}>{section.eyebrow}</p>
+        <h2 id={id} className={styles.ctaTitle}>
+          {section.title}
+        </h2>
+        <p className={styles.lead}>{section.body}</p>
+        <p className={styles.success} role="status" data-ws="form-success" hidden>
+          {section.success}
+        </p>
+        <form className={styles.form} data-ws="form" noValidate>
+          <label className={styles.field}>
+            <span>Work email</span>
+            <input type="email" name="email" placeholder="name@example.com" autoComplete="email" required />
+          </label>
+          <label className={styles.field}>
+            <span>Organisation (optional)</span>
+            <input name="organisation" autoComplete="organization" />
+          </label>
+          <p className={styles.formError} role="alert" data-ws="form-error" hidden>
+            Enter an email address, like name@example.com.
+          </p>
+          <button type="submit" className={`${styles.button} ${styles.buttonPrimary}`}>
+            {direction.sample.primaryCta}
+          </button>
+        </form>
+      </Reveal>
+    </section>
+  );
+}
+
+function LiveCta({ section, direction, interactive, id }: { section: SectionOf<"cta">; direction: Direction; interactive: boolean; id: string }) {
   const [email, setEmail] = useState("");
   const [organisation, setOrganisation] = useState("");
   const [error, setError] = useState<string | null>(null);

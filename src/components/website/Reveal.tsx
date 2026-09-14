@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState, type ElementType, type ReactNode } from "react";
 import { useWebsiteFrame } from "./WebsiteContext";
-import styles from "./Website.module.css";
+import { siteClasses } from "./site-classes";
+
+const styles = siteClasses("ws");
 
 /*
  * Fades a block up as it scrolls into the frame. Anything already in view on

@@ -1,5 +1,7 @@
 import type { VisualStyle } from "@/lib/direction";
-import styles from "./CoastlineVisual.module.css";
+import { SiteStyles, siteClasses } from "@/components/website/site-classes";
+
+const styles = siteClasses("wv");
 
 /*
  * The Ebbfield coastline illustration, drawn three ways. Every colour comes
@@ -22,6 +24,8 @@ const POINTS = [
 
 export function CoastlineVisual({ style, className }: { style: VisualStyle; className?: string }) {
   return (
+    <>
+    <SiteStyles />
     <svg
       className={[styles.visual, className].filter(Boolean).join(" ")}
       viewBox="0 0 400 260"
@@ -33,6 +37,7 @@ export function CoastlineVisual({ style, className }: { style: VisualStyle; clas
       {style === "grid" && <Grid />}
       {style === "soft" && <Soft />}
     </svg>
+    </>
   );
 }
 
@@ -46,7 +51,7 @@ function Contours() {
           d={SHORE}
           transform={`translate(${dx} 0)`}
           className={styles.contourLine}
-          style={{ opacity: 0.55 - i * 0.09 }}
+          style={{ opacity: Math.round((0.55 - i * 0.09) * 100) / 100 }}
         />
       ))}
       <path d={SHORE} className={styles.tideLine} />

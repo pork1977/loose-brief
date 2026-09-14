@@ -510,6 +510,27 @@
   }
 }
 
+/* ------------------------------------------------- editor-only highlights */
+
+/* The token inspector points at parts of a brand preview, in the editor's own accent. */
+.brand-scope [data-inspect-hit="true"] {
+  outline: 4px solid var(--ui-color-accent) !important;
+  outline-offset: 4px;
+}
+
+/* A section briefly outlined after jumping to it from the Studio's section list. */
+.brand-scope [data-section][data-flash="true"] {
+  animation: lb-section-flash 1.4s ease-out;
+}
+@keyframes lb-section-flash {
+  from {
+    box-shadow: inset 0 0 0 4px var(--ui-color-accent);
+  }
+  to {
+    box-shadow: inset 0 0 0 4px transparent;
+  }
+}
+
 /* ------------------------------------------------------ page transitions */
 
 ::view-transition {

@@ -100,7 +100,7 @@ export function StudioCanvas({ brandName, direction, mode, viewport, label, onAp
     onApi?.({ goTo, setScrollRatio });
   }, [onApi, goTo, setScrollRatio]);
 
-  const frame = useMemo<WebsiteFrame>(() => ({ interactive: true, scrollRoot: scroller, goTo }), [scroller, goTo]);
+  const frame = useMemo<WebsiteFrame>(() => ({ interactive: true, exporting: false, scrollRoot: scroller, goTo }), [scroller, goTo]);
 
   const height = Math.max(0, box.height - bezel);
 
